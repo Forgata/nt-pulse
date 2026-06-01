@@ -2,17 +2,7 @@ import http from "http";
 import { performance } from "perf_hooks";
 import { URL } from "url";
 
-enum EngineState {
-  IDLE = "IDLE",
-  DISCOVERING = "DISCOVERING",
-  LATENCY_CHECK = "LATENCY_CHECK",
-  TCP_WARMUP = "TCP_WARMUP",
-  SAMPLING = "SAMPLING",
-  FINALIZING = "FINALIZING",
-}
-
 const ORCHESTRATOR_URL = "http://localhost:4000/discover";
-
 const CLIENT_LAT = -15.7861;
 const CLIENT_LON = 35.0058;
 
@@ -20,27 +10,19 @@ const CONCURRENT_SOCKETS = 6;
 const WARMUP_DURATION_MS = 2000;
 const SAMPLING_DURATION_MS = 5000;
 
-class NTPulseIntegratedClient {
-  private state: EngineState = EngineState.IDLE;
+class NTPulseClient {
   private totalBytesTracked = 0;
   private activeRequests: http.ClientRequest[] = [];
   private samplingStartTime = 0;
   private intervalId: NodeJS.Timeout | null = null;
+  private isSamplingActive = false;
 
   private targetHost = "";
-  private targetPort = 80;
-
-  private changeState(newState: EngineState) {
-    this.state = newState;
-    console.log(`\n[STATE CHANGE] ➔ ${this.state}`);
-  }
+  private targetPort = 0;
+  private token = "";
 
   async discoverOptimalNode(): Promise<string> {
-    this.changeState(EngineState.DISCOVERING);
-    console.log(
-      `[GATEWAY] Querying topology matrix for closest edge targets...`,
-    );
-
+    console.log(`[DISCOVERY] Querying Orchestrator Gateway...`);
     const payload = JSON.stringify({
       latitude: CLIENT_LAT,
       longitude: CLIENT_LON,
@@ -63,152 +45,129 @@ class NTPulseIntegratedClient {
           let body = "";
           res.on("data", (chunk) => (body += chunk));
           res.on("end", () => {
-            if (res.statusCode !== 200) {
-              return reject(
-                new Error(`Discovery failed with status ${res.statusCode}`),
-              );
-            }
+            if (res.statusCode !== 200)
+              return reject(new Error("Discovery failed"));
+            const data = JSON.parse(body);
 
-            const responseData = JSON.parse(body);
-            if (
-              !responseData.suggestedNodes ||
-              responseData.suggestedNodes.length === 0
-            ) {
-              return reject(
-                new Error(
-                  "No active or healthy edge nodes available near your location.",
-                ),
-              );
-            }
-
-            const primaryNode = responseData.suggestedNodes[0];
-            console.log(
-              `[DISCOVERY SUCCESS] Selected Node: ${primaryNode.id} (${primaryNode.distanceKm} km away)`,
-            );
-            resolve(primaryNode.endpoint);
+            this.token = data.token;
+            resolve(data.suggestedNodes[0].endpoint);
           });
         },
       );
-
-      req.on("error", (err) => reject(err));
       req.write(payload);
       req.end();
     });
   }
 
-  async runLatencyCheck(samplesCount = 5): Promise<void> {
-    this.changeState(EngineState.LATENCY_CHECK);
+  async runLatencyCheck(): Promise<{ ping: number; jitter: number }> {
+    console.log(`[LATENCY] Assessing round-trip vectors...`);
     const latencies: number[] = [];
 
-    const options: http.RequestOptions = {
-      hostname: this.targetHost,
-      port: this.targetPort,
-      path: "/download",
-      method: "HEAD",
-      agent: false,
-    };
-
-    for (let i = 0; i < samplesCount; i++) {
+    for (let i = 0; i < 5; i++) {
       await new Promise<void>((resolve) => {
         const start = performance.now();
-        const req = http.request(options, (res) => {
-          const end = performance.now();
-          latencies.push(end - start);
-          res.resume();
-          resolve();
-        });
+        const req = http.request(
+          {
+            hostname: this.targetHost,
+            port: this.targetPort,
+            path: `/download?t=${Date.now()}`,
+            method: "HEAD",
+            agent: false,
+            headers: { "X-Pulse-Token": this.token },
+          },
+          (res) => {
+            latencies.push(performance.now() - start);
+            res.resume();
+            resolve();
+          },
+        );
         req.on("error", () => resolve());
         req.end();
       });
     }
 
-    const avgPing = latencies.reduce((a, b) => a + b, 0) / latencies.length;
-    let totalDifference = 0;
-    for (let i = 1; i < latencies.length; i++) {
-      totalDifference += Math.abs(latencies[i]! - latencies[i - 1]!);
-    }
-    const jitter = totalDifference / (latencies.length - 1);
+    const ping = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+    let diffs = 0;
+    for (let i = 1; i < latencies.length; i++)
+      diffs += Math.abs(latencies[i]! - latencies[i - 1]!);
+    const jitter = diffs / (latencies.length - 1);
 
-    console.log(`[METRICS] Target Baseline Ping: ${avgPing.toFixed(2)}ms`);
-    console.log(`[METRICS] Target Baseline Jitter: ${jitter.toFixed(2)}ms`);
+    return { ping, jitter };
   }
 
   public async run() {
     try {
       const endpoint = await this.discoverOptimalNode();
       const urlTokens = new URL(endpoint);
-
       this.targetHost = urlTokens.hostname;
       this.targetPort = parseInt(urlTokens.port || "80");
 
-      await this.runLatencyCheck();
-
-      this.changeState(EngineState.TCP_WARMUP);
+      const metrics = await this.runLatencyCheck();
       console.log(
-        `[LAUNCH] Initializing link saturation across ${CONCURRENT_SOCKETS} independent sockets...`,
+        `[LATENCY] Baseline Complete -> Ping: ${metrics.ping.toFixed(2)}ms | Jitter: ${metrics.jitter.toFixed(2)}ms`,
       );
 
-      const options: http.RequestOptions = {
-        hostname: this.targetHost,
-        port: this.targetPort,
-        path: "/download",
-        method: "GET",
-        agent: false,
-      };
+      console.log(
+        `[WARMUP] Priming TCP transport pipes (Slowing Slow-Start)...`,
+      );
 
       for (let i = 0; i < CONCURRENT_SOCKETS; i++) {
+        const options: http.RequestOptions = {
+          hostname: this.targetHost,
+          port: this.targetPort,
+          path: "/download",
+          method: "GET",
+          agent: false,
+          headers: { "X-Pulse-Token": this.token },
+        };
+
         const req = http.get(options, (res) => {
+          if (res.statusCode === 403) {
+            console.error(
+              `[CRITICAL] Edge Node rejected connection with 403 Forbidden.`,
+            );
+            process.exit(1);
+          }
           res.on("data", (chunk: Buffer) => {
-            if (this.state === EngineState.SAMPLING) {
+            if (this.isSamplingActive) {
               this.totalBytesTracked += chunk.length;
             }
           });
         });
-
-        req.on("error", (err) => {
-          if (this.state !== EngineState.FINALIZING) {
-            console.error(`[SOCKET ERROR] ${err.message}`);
-          }
-        });
-
         this.activeRequests.push(req);
       }
 
       setTimeout(() => {
+        console.log(`[STATE] ➔ SAMPLING WINDOW OPENED`);
         this.totalBytesTracked = 0;
         this.samplingStartTime = performance.now();
-        this.changeState(EngineState.SAMPLING);
+        this.isSamplingActive = true;
 
-        this.intervalId = setInterval(() => this.emitLiveMetrics(), 200);
+        this.intervalId = setInterval(() => {
+          const elapsed = (performance.now() - this.samplingStartTime) / 1000;
+          const mbps = (this.totalBytesTracked * 8) / (elapsed * 1000000);
+          console.log(
+            `[LIVE SPEEDS] Running... Throughput Capability: ${mbps.toFixed(2)} Mbps`,
+          );
+        }, 400);
 
-        setTimeout(() => this.teardownAndFinalize(), SAMPLING_DURATION_MS);
+        setTimeout(
+          () => this.teardownAndFinalize(metrics.ping, metrics.jitter),
+          SAMPLING_DURATION_MS,
+        );
       }, WARMUP_DURATION_MS);
-    } catch (error: any) {
-      console.error(`\n[CRITICAL ENGINE FAILURE] ${error.message}`);
-      this.state = EngineState.IDLE;
+    } catch (err: any) {
+      console.error(`[FAILURE] ${err.message}`);
     }
   }
 
-  private emitLiveMetrics() {
-    const elapsedSeconds = (performance.now() - this.samplingStartTime) / 1000;
-    if (elapsedSeconds <= 0) return;
-
-    const mbps = (this.totalBytesTracked * 8) / (elapsedSeconds * 1000000);
-    process.stdout.write(
-      `\r[LIVE SPEEDS] Running... Throughput Capability: ${mbps.toFixed(2)} Mbps`,
-    );
-  }
-
-  private teardownAndFinalize() {
-    this.changeState(EngineState.FINALIZING);
+  private teardownAndFinalize(ping: number, jitter: number) {
+    this.isSamplingActive = false;
     if (this.intervalId) clearInterval(this.intervalId);
 
     const elapsedSeconds = (performance.now() - this.samplingStartTime) / 1000;
     const finalMbps = (this.totalBytesTracked * 8) / (elapsedSeconds * 1000000);
 
-    console.log(
-      `\n[TEARDOWN] Dropping high-volume client streaming connections...`,
-    );
     this.activeRequests.forEach((req) => req.destroy());
     this.activeRequests = [];
 
@@ -227,16 +186,13 @@ class NTPulseIntegratedClient {
 
     const telemetryPayload = JSON.stringify({
       nodeId: "edge-blantyre",
-      pingMs: 0.5, // Mocked from the latency check phase cache
-      jitterMs: 0.1,
+      pingMs: ping,
+      jitterMs: jitter,
       throughputMbps: finalMbps,
       socketsUsed: CONCURRENT_SOCKETS,
       bytesTransferred: this.totalBytesTracked,
     });
 
-    console.log(
-      `[TELEMETRY] Shipping post-flight diagnostic records out-of-band...`,
-    );
     const reportReq = http.request({
       hostname: "localhost",
       port: 4000,
@@ -247,14 +203,10 @@ class NTPulseIntegratedClient {
         "Content-Length": Buffer.byteLength(telemetryPayload),
       },
     });
-
-    reportReq.on("error", (e) =>
-      console.log(`[TELEMETRY WARN] Failed to log telemetry: ${e.message}`),
-    );
     reportReq.write(telemetryPayload);
     reportReq.end();
   }
 }
 
-const engine = new NTPulseIntegratedClient();
+const engine = new NTPulseClient();
 engine.run();
