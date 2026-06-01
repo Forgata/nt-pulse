@@ -1,4 +1,4 @@
-# Contributing to Ping
+# Contributing to NT-Pulse
 
 ## Getting Started
 
