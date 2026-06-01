@@ -80,7 +80,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 404 Fallback Boundary
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end("Route Not Found");
 });
@@ -88,3 +87,42 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`[ENGINE] NT-Pulse Edge Target listening on port ${PORT}`);
 });
+
+const registerWithGateway = () => {
+  const payload = JSON.stringify({
+    id: "edge-blantyre",
+    host: "localhost",
+    port: PORT,
+    latitude: -15.7861,
+    longitude: 35.0058,
+  });
+
+  const options: http.RequestOptions = {
+    hostname: "localhost",
+    port: 4000,
+    path: "/register",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload),
+    },
+  };
+
+  const req = http.request(options, (res) => {
+    if (res.statusCode === 200) {
+      console.log(
+        `[HEARTBEAT] Core check-in acknowledged by Orchestrator Gateway.`,
+      );
+    }
+  });
+
+  req.on("error", (err) => {
+    console.log(`[HEARTBEAT WARN] Orchestrator unreachable: ${err.message}`);
+  });
+
+  req.write(payload);
+  req.end();
+};
+
+setTimeout(registerWithGateway, 1000);
+setInterval(registerWithGateway, 15000);
