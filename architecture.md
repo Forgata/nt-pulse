@@ -120,3 +120,9 @@ The measurement window opens. The client starts a high-resolution microsecond ti
 ### Phase 5: Teardown & Finalization
 
 When the execution timer (e.g., 5000ms) expires, the client closes all active connection streams immediately to free system memory. It calculates final throughput against the isolated sampling window metrics and prints the summary. It then sends an out-of-band diagnostic payload back to the analytics layer before exiting cleanly.
+
+## Routing Topology
+
+- Fast.com: Focuses on a Global Distributed CDN architecture. When you visit the site, Netflix's global DNS routing automatically pairs your browser with the geographically closest OCA server inside your local ISP network. It measures how fast you can stream content from the exact location where Netflix video traffic is served.
+
+- NT-Pulse: Uses an Orchestration Gateway Topology. The system separates the control plane from the data plane. The Orchestrator acts as a central command tower, managing an elastic mesh of standalone Edge Nodes. It handles geo-proximity routing via coordinate vectors and issues time-restricted, cryptographically signed HMAC tokens. This makes NT-Pulse highly modular—it can be deployed as a private telemetry mesh inside a enterprise intranet, a localized data center cluster, or a custom nationwide network benchmarking utility.
