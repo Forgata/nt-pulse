@@ -51,6 +51,8 @@ NT-Pulse shares its core mathematical philosophy with Fast.com (Netflix's speed 
 | **Memory Allocation**  | **Zero-Allocation Data Plane**. Drops incoming packets instantly. V8 GC is never triggered.         | **Browser Array Buffers**. Retains chunks temporarily, occasionally triggering browser Garbage Collection pauses. |
 | **Security & Routing** | **HMAC-SHA256 Token Gates**. Orchestrator passes secure tokens for direct IP handshakes.            | **Anycast GeoDNS**. Relies on global DNS infrastructure to route to the closest datacenter.                       |
 
+### **[READ THE ARCHITECTURE.md](./ARCHITECTURE.md)**
+
 ## Getting Started
 
 Ensure you have a recent version of Node.js installed. The system utilizes `tsx` for rapid TypeScript execution.

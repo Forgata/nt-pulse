@@ -2,10 +2,36 @@
   "name": "nt-pulse",
   "version": "1.0.0",
   "description": "",
+  "keywords": [
+    "nodejs",
+    "typescript",
+    "tcp",
+    "http-streams",
+    "websockets",
+    "distributed-systems",
+    "edge-computing",
+    "orchestrator-pattern",
+    "client-server-mesh",
+    "zero-dependency",
+    "microservices",
+    "network-saturation",
+    "throughput-tester",
+    "bandwidth-measurement",
+    "zero-allocation",
+    "low-latency",
+    "bare-metal-networking",
+    "tcp-slow-start-bypass",
+    "hmac-sha256",
+    "token-authentication",
+    "telemetry",
+    "out-of-band-logging",
+    "network-observability"
+  ],
   "homepage": "https://github.com/Forgata/nt-pulse#readme",
   "bugs": {
     "url": "https://github.com/Forgata/nt-pulse/issues"
   },
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Forgata/nt-pulse.git"
