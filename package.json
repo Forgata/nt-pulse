@@ -1,0 +1,31 @@
+{
+  "name": "nt-pulse",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Forgata/nt-pulse#readme",
+  "bugs": {
+    "url": "https://github.com/Forgata/nt-pulse/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Forgata/nt-pulse.git"
+  },
+  "license": "MIT",
+  "author": "Forgata",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "npm run build && tsx watch src/server.ts",
+    "client": "npm run build && tsx watch src/client.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "nodemon": "^3.1.14",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
+  }
+}
