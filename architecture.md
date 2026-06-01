@@ -1,4 +1,4 @@
-# Architecture Specification: NT-Pulse
+# Architecture: NT-Pulse
 
 NT-Pulse is a production-grade, distributed real-time network throughput engine engineered in Node.js and TypeScript. It replicates the core architectural patterns of [Fast.com](https://fast.com/) to isolate, measure, and calculate raw bandwidth metrics by eliminating platform overhead and transport layer initialization artifacts.
 
@@ -12,7 +12,7 @@ $$\text{Throughput (Mbps)} = \frac{\text{Payload Size (Bytes)} \times 8}{\text{S
 
 ---
 
-## 2. High-Level System Architecture
+## 2. Architecture
 
 ┌─────────────────────────┐
 │ 1. Client Application │
@@ -48,9 +48,9 @@ Telemetry Data Logs (Async Worker)
 
 ---
 
-## 3. Tier-by-Tier Architectural Breakdown
+## 3. Architectural Breakdown
 
-### Tier 1: The Client Engine (Telemetry & Saturation)
+### Tier 1: The Client Engine
 
 The client application functions as an isolated I/O stress tester. Its lone objective is to intentionally flood the local network path to capacity and track packet ingestion.
 
@@ -61,7 +61,7 @@ The client application functions as an isolated I/O stress tester. Its lone obje
   - Emitting telemetry events at fixed intervals (e.g., every 200ms) to drive live UI updates.
 - **Key Design Pattern:** **Non-Blocking Worker Pools.** Implemented using native Node.js HTTP stream handlers explicitly configured with `agent: false`. This bypasses connection pool reuse policies and forces the operating system to open raw, independent sockets.
 
-### Tier 2: The Orchestration Tier (The Brain)
+### Tier 2: The Orchestration
 
 A lightweight API gateway that functions as the central registry, traffic cop, and authorization wall. Clients must query this tier to discover safe targets before initiating a benchmark run.
 
@@ -71,7 +71,7 @@ A lightweight API gateway that functions as the central registry, traffic cop, a
   - Running path-sorting logic to match the client with the 3 most optimal edge target nodes.
 - **Key Design Pattern:** **Topology-Aware Geographic Routing.** Computes network topological distance and sorts the node array based on geographic coordinates via the Haversine formula, using a fast Redis layer to cache live node availability states.
 
-### Tier 3: The Distributed Edge Network (The Power)
+### Tier 3: The Distributed Edge Network
 
 Minimal, hyper-optimized infrastructure instances deployed globally at internet exchange points or edge cloud providers. These nodes handle raw data traffic with zero compute overhead.
 
@@ -80,7 +80,7 @@ Minimal, hyper-optimized infrastructure instances deployed globally at internet 
   - Providing an execution black hole endpoint for incoming client upload streams.
 - **Key Design Pattern:** **Zero-Allocation Memory Stream Handlers.** On boot, the server allocates a fixed-size buffer block (e.g., 50MB of randomized bits) directly inside system RAM. All incoming client download streams point straight to this memory buffer using zero-copy stream chunking, isolating performance bottlenecks to the network hardware interface.
 
-### Tier 4: The Analytics & Logging Layer (The History)
+### Tier 4: The Analytics & Logging Layer
 
 An out-of-band data engine designed to record and process telemetry tracking info without interrupting active clients.
 
@@ -91,7 +91,7 @@ An out-of-band data engine designed to record and process telemetry tracking inf
 
 ---
 
-## 4. Core Execution Lifecycle
+## 4. Lifecycle
 
 Whenever an NT-Pulse testing cycle is triggered, it transitions through five distinct sequential phases:
 
@@ -109,7 +109,7 @@ Before data streams open, the client fires 5 consecutive HTTP `HEAD` or `OPTIONS
 - **Ping:** The arithmetic mean of the connection loop times.
 - **Jitter:** The statistical variance between those loop times.
 
-### Phase 3: Pipe Squeeze (TCP Warmup)
+### Phase 3: Pipe Squeeze
 
 The client launches its multi-threaded connection worker pool, making simultaneous download requests against the Edge Node. Data streams down for 1.5 to 2.0 seconds. During this window, **all byte counters are ignored**. This gives the client-side environment and the OS transport layer time to scale up the TCP Window Size via the TCP Slow-Start protocol, bringing the path to full saturation.
 
