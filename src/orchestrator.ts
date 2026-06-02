@@ -1,7 +1,7 @@
 import "dotenv/config";
 import http from "http";
 import crypto from "crypto";
-import { calculateHaversineDistance } from "./haversineDIstance.js";
+import { calculateHaversineDistance } from "./orchestrator/haversineDIstance.js";
 
 const PORT = 4000;
 const ORCHESTRATION_SECRET =
