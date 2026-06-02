@@ -55,6 +55,10 @@ NT-Pulse shares its core mathematical philosophy with Fast.com (Netflix's speed 
 
 Ensure you have a recent version of Node.js installed. The system utilizes `tsx` for rapid TypeScript execution.
 
+```bash
+npm install
+```
+
 ### 1. Boot the Control Plane
 
 Start the Orchestrator gateway to manage the mesh topology:
