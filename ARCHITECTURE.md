@@ -15,38 +15,40 @@ $$\text{Throughput (Mbps)} = \frac{\text{Payload Size (Bytes)} \times 8}{\text{S
 ## 2. Architecture
 
 ```mermaid
+flowchart TD
+    %% Define Styles
+    classDef clientStyle fill:#1e293b,color:#ffffff,stroke:#0f172a,stroke-width:2px;
+    classDef orchStyle fill:#2563eb,color:#ffffff,stroke:#1d4ed8,stroke-width:2px;
+    classDef edgeStyle fill:#0d9488,color:#ffffff,stroke:#0f766e,stroke-width:1px;
+    classDef analyticsStyle fill:#4f46e5,color:#ffffff,stroke:#4338ca,stroke-width:2px;
 
-graph TD
-classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;
-classDef edgeNode fill:#eef7ff,stroke:#0066cc,stroke-width:1px;
+    %% Tier 1
+    Client["1. Client Application<br/>(CLI / Web / Desktop)"]:::tierStyle
 
-    N1["1. Client Application <br> (CLI / Web / Desktop)"]
-    N2["2. Orchestration Tier <br> (API Gateway / Auth)"]
+    %% Tier 2
+    Orchestration["2. Orchestration Tier<br/>(API Gateway / Auth)"]:::tierStyle
 
-    subgraph N3 ["3. Distributed Edge Target Network"]
+    %% Tier 3 (Distributed Network)
+    subgraph Tier3 ["3. Distributed Edge Target Network"]
         direction LR
-        A["Edge Node A <br> (US-East) <br> [RAM Streamer]"]
-        B["Edge Node B <br> (EU-West) <br> [RAM Streamer]"]
-        C["Edge Node C <br> (Asia-East) <br> [RAM Streamer]"]
+        NodeA["Edge Node A<br/>(US-East)<br/>[RAM Streamer]"]:::edgeStyle
+        NodeB["Edge Node B<br/>(EU-West)<br/>[RAM Streamer]"]:::edgeStyle
+        NodeC["Edge Node C<br/>(Asia-East)<br/>[RAM Streamer]"]:::edgeStyle
     end
 
-    N4["4. Analytics Layer <br> (TimescaleDB / Redis)"]
+    %% Tier 4
+    Analytics["4. Analytics Layer<br/>(TimescaleDB / Redis)"]:::tierStyle
 
+    %% Connections & Flow
+    Client -->|"Get Closest Edges (HTTPS)"| Orchestration
 
-    N1 -->|Get Closest Edges (HTTPS)| N2
+    Orchestration -->|"Queries Optimal Nodes"| NodeA
+    Orchestration -->|"Queries Optimal Nodes"| NodeB
+    Orchestration -->|"Queries Optimal Nodes"| NodeC
 
-
-    N2 -->|Queries Optimal Nodes| A
-    N2 -->|Queries Optimal Nodes| B
-    N2 -->|Queries Optimal Nodes| C
-
-
-    A -->|Telemetry Data Logs| N4
-    B -->|Telemetry Data Logs| N4
-    C -->|Telemetry Data Logs| N4
-
-    %% Apply Style Classes
-    class A,B,C edgeNode;
+    NodeA -->|"Telemetry Data Logs<br/>(Async Worker)"| Analytics
+    NodeB -->|"Telemetry Data Logs<br/>(Async Worker)"| Analytics
+    NodeC -->|"Telemetry Data Logs<br/>(Async Worker)"| Analytics
 ```
 
 ---
