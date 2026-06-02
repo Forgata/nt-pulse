@@ -13,7 +13,6 @@ export function fetchOptimalRouteToken(clientProfile: clientProfile): Promise<{
       longitude: clientProfile.longitude,
     });
 
-    // Configured as an explicit object to ensure exact stream transmission
     const req = http.request(
       {
         hostname: "localhost",

@@ -15,7 +15,6 @@ let clientProfile = {
 let totalBytesTracked = 0;
 let activePhase: "WARMUP" | "SAMPLING" | "DONE" = "WARMUP";
 
-// Phase 3: Vector Baseline Calibration (Ping / Jitter)
 function runCalibration(
   endpoint: string,
 ): Promise<{ pingMs: number; jitterMs: number }> {
@@ -63,7 +62,6 @@ function runCalibration(
   });
 }
 
-// Phase 4: High-Resolution Active Pipe Squeeze Saturation Test
 function runThroughputTest(endpoint: string, token: string): Promise<number> {
   return new Promise((resolve) => {
     console.log(
@@ -141,7 +139,6 @@ function runThroughputTest(endpoint: string, token: string): Promise<number> {
   });
 }
 
-// Phase 5: Decoupled Out-of-Band Telemetry Ingest Shipping
 function shipTelemetry(
   nodeId: string,
   pingMs: number,
