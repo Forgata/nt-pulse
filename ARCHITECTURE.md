@@ -14,12 +14,12 @@ $$\text{Throughput (Mbps)} = \frac{\text{Payload Size (Bytes)} \times 8}{\text{S
 
 ## 2. Architecture
 
+```mermaid
+
 graph TD
-%% Define Styles
 classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;
 classDef edgeNode fill:#eef7ff,stroke:#0066cc,stroke-width:1px;
 
-    %% Nodes
     N1["1. Client Application <br> (CLI / Web / Desktop)"]
     N2["2. Orchestration Tier <br> (API Gateway / Auth)"]
 
@@ -32,13 +32,22 @@ classDef edgeNode fill:#eef7ff,stroke:#0066cc,stroke-width:1px;
 
     N4["4. Analytics Layer <br> (TimescaleDB / Redis)"]
 
-    %% Connections
+
     N1 -->|Get Closest Edges (HTTPS)| N2
-    N2 -->|Queries Optimal Nodes| N3
-    N3 -->|Telemetry Data Logs (Async Worker)| N4
+
+
+    N2 -->|Queries Optimal Nodes| A
+    N2 -->|Queries Optimal Nodes| B
+    N2 -->|Queries Optimal Nodes| C
+
+
+    A -->|Telemetry Data Logs| N4
+    B -->|Telemetry Data Logs| N4
+    C -->|Telemetry Data Logs| N4
 
     %% Apply Style Classes
     class A,B,C edgeNode;
+```
 
 ---
 
