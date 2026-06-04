@@ -58,16 +58,16 @@ export async function registerWithOrchestrator(networkProfile: NetworkProfile) {
       "[BOOT] Dispatching topology profile to orchestrator control plane...",
     );
 
-    const response = await fetch(
-      `http://127.0.0.1:${ORCHESTRATION_PORT}/register`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(networkProfile),
+    const orchestratorHost =
+      process.env.ORCHESTRATION_HOST || "http://127.0.0.1:4000";
+
+    const response = await fetch(`${orchestratorHost}/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify(networkProfile),
+    });
 
     if (!response.ok) {
       throw new Error(

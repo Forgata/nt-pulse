@@ -25,6 +25,7 @@ services:
       - key: ORCHESTRATION_SECRET
         value: "generate-a-long-random-string-here-12345"
       - key: ORCHESTRATION_HOST
+        value: "http://nt-pulse-orchestrator:4000"
         fromService:
           type: web
           name: nt-pulse-orchestrator
