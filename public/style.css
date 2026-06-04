@@ -1,0 +1,240 @@
+@import url("https://fonts.googleapis.com/css2?family=Black+Ops+One&family=M+PLUS+1+Code:wght@100..700&family=M+PLUS+1:wght@100..900&display=swap");
+
+:root {
+  --bg-color: #050505;
+  --text-main: #e0e0e0;
+  --text-muted: #555555;
+  --accent: #00ff66;
+  --accent-warn: #ffb300;
+  --font-stack: "M PLUS 1 Code", monospace;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 200,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: var(--font-stack);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+  padding: 2rem;
+  overflow-x: hidden;
+}
+
+header {
+  letter-spacing: -0.02em;
+  padding-inline: 0.5rem;
+  border-bottom: 1px solid #111;
+  padding-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header .title h1 {
+  font-family: "Black Ops One";
+}
+
+header .version {
+  font-size: 0.89rem;
+  color: var(--text-muted);
+  font-family: var(--font-stack);
+}
+
+header .configs {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  justify-content: center;
+}
+
+header .configs span {
+  cursor: pointer;
+}
+
+header p {
+  font-size: smaller;
+}
+
+.system-status {
+  color: var(--text-muted);
+}
+
+main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.display-container {
+  margin-bottom: 2rem;
+}
+
+.speed-number {
+  font-size: 8.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--text-main);
+  transition: color 0.2s ease;
+  font-family: "M PLUS 1";
+}
+
+.speed-number.active {
+  color: var(--accent);
+}
+
+.speed-unit {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  /* text-transform: uppercase; */
+  letter-spacing: 0.1em;
+}
+
+button {
+  background: transparent;
+  border: 1px solid #222;
+  color: var(--text-main);
+  font-family: var(--font-stack);
+  padding: 0.75rem 2rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+}
+
+button:hover {
+  background: #111;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button:disabled {
+  border-color: #111;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+footer {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.diagnostics-toggle {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  user-select: none;
+}
+
+.diagnostics-toggle:hover {
+  color: var(--text-main);
+}
+
+.diagnostics-panel {
+  background: #090909;
+  border: 1px solid #111;
+  padding: 1rem;
+  font-size: 0.8rem;
+  display: none;
+  font-family: "M Plus 1";
+}
+
+.diagnostics-panel.visible {
+  display: block;
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.data-row:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  color: var(--text-muted);
+}
+
+.value {
+  color: var(--text-main);
+}
+
+.value.highlight {
+  color: var(--accent);
+}
+
+/* loader */
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 120px;
+  height: 20px;
+  background: linear-gradient(#ddd 0 0) 0/0% no-repeat #000;
+  animation: l1 2s infinite linear;
+}
+@keyframes l1 {
+  100% {
+    background-size: 100%;
+  }
+}
+
+/* media queries */
+
+@media (width < 475px) {
+  .title h1 {
+    font-size: 1.4rem;
+  }
+
+  .title p {
+    font-size: smaller;
+  }
+
+  .configs .system-status {
+    display: none;
+  }
+
+  .speed-number {
+    font-size: 4rem;
+  }
+}
+
+@media (width < 375px) {
+  .speed-number {
+    font-size: 3rem;
+  }
+
+  .title p {
+    font-size: x-small;
+  }
+
+  .diagnostics-panel {
+    font-size: x-small;
+  }
+}

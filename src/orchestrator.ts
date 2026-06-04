@@ -15,19 +15,71 @@ interface EdgeNode {
   id: string;
   host: string;
   port: number;
+  wsPort: number;
   latitude: number;
   longitude: number;
   isp: string;
   city: string;
   lastSeen: number;
 }
+
 const activeNodes = new Map<string, EdgeNode>();
 const telemetryHistory: any[] = [];
 
-const server = http.createServer((req, res) => {
-  const { method, url } = req;
+async function resolveClientIpGeo(
+  ip: string,
+): Promise<{ lat: number; lon: number; isp: string; city: string }> {
+  if (ip === "::1" || ip === "127.0.0.1" || ip.startsWith("::ffff:127.0.0.1")) {
+    return {
+      lat: -15.7861,
+      lon: 35.0058,
+      isp: "Local Loopback Driver",
+      city: "Blantyre",
+    };
+  }
+  try {
+    const response = await fetch(
+      `http://ip-api.com/json/${ip}?fields=status,lat,lon,isp,city`,
+    );
+    if (!response.ok) throw new Error();
+    const data = await response.json();
+    if (data.status === "success") {
+      return {
+        lat: parseFloat(data.lat),
+        lon: parseFloat(data.lon),
+        isp: data.isp,
+        city: data.city,
+      };
+    }
+  } catch {}
+  // Default regional fallback parameter layout if external resolution fails
+  return {
+    lat: -15.7861,
+    lon: 35.0058,
+    isp: "Default Network ISP",
+    city: "Blantyre",
+  };
+}
 
-  if (url === "/register" && method === "POST") {
+const server = http.createServer(async (req, res) => {
+  const { method, url } = req;
+  if (!url) return;
+
+  const origin = req.headers.origin || "*";
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const parsedUrl = new URL(url, `http://${req.headers.host || "localhost"}`);
+  const pathname = parsedUrl.pathname;
+
+  if (pathname === "/register" && method === "POST") {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
@@ -37,6 +89,7 @@ const server = http.createServer((req, res) => {
         if (
           !nodeData.id ||
           !nodeData.port ||
+          !nodeData.wsPort ||
           nodeData.latitude == null ||
           nodeData.longitude == null
         ) {
@@ -46,15 +99,13 @@ const server = http.createServer((req, res) => {
         }
 
         activeNodes.set(nodeData.id, {
-          id: nodeData.id,
-          host: nodeData.host || "localhost",
-          port: nodeData.port,
-          latitude: nodeData.latitude,
-          longitude: nodeData.longitude,
-          isp: nodeData.isp || "Unknown ISP",
-          city: nodeData.city || "Unknown Location",
+          ...nodeData,
           lastSeen: Date.now(),
         });
+
+        console.log(
+          `[REGISTRY] Dynamic node updated: ${nodeData.id} | Location: ${nodeData.city} | ISP: ${nodeData.isp}`,
+        );
 
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(
@@ -71,82 +122,157 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (url === "/discover" && method === "POST") {
-    let body = "";
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", () => {
-      try {
-        const clientLoc = JSON.parse(body);
-        const cLat = clientLoc.latitude;
-        const cLon = clientLoc.longitude;
+  if (pathname === "/discover") {
+    if (method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => (body += chunk));
+      req.on("end", () => {
+        try {
+          const clientLoc = JSON.parse(body);
+          const cLat = clientLoc.latitude;
+          const cLon = clientLoc.longitude;
 
-        if (cLat == null || cLon == null) {
-          res.writeHead(400);
-          res.end("Client geographic vector inputs missing.");
-          return;
-        }
+          if (cLat == null || cLon == null) {
+            res.writeHead(400);
+            res.end("Client geographic vector inputs missing.");
+            return;
+          }
 
-        if (activeNodes.size === 0) {
-          res.writeHead(503, { "Content-Type": "application/json" });
+          if (activeNodes.size === 0) {
+            res.writeHead(503, { "Content-Type": "application/json" });
+            res.end(
+              JSON.stringify({
+                error: "No edge deployment pools available online.",
+              }),
+            );
+            return;
+          }
+
+          const rankedNodes = Array.from(activeNodes.values()).map((node) => {
+            const distanceKm = calculateHaversineDistance(
+              cLat,
+              cLon,
+              node.latitude,
+              node.longitude,
+            );
+            return {
+              id: node.id,
+              endpoint: `ws://${node.host}:${node.wsPort}/speedtest`,
+              isp: node.isp,
+              city: node.city,
+              distanceKm: parseFloat(distanceKm.toFixed(2)),
+              latitude: node.latitude,
+              longitude: node.longitude,
+            };
+          });
+
+          rankedNodes.sort((a, b) => a.distanceKm - b.distanceKm);
+          const optimalNode = rankedNodes[0]!;
+
+          const tokenPayload = JSON.stringify({
+            iss: "nt-pulse-orchestrator",
+            exp: Date.now() + 60000,
+            targetNode: optimalNode.id,
+          });
+          const base64Payload = Buffer.from(tokenPayload).toString("base64");
+          const signature = crypto
+            .createHmac("sha256", ORCHESTRATION_SECRET)
+            .update(tokenPayload)
+            .digest("hex");
+          const secureToken = `${base64Payload}.${signature}`;
+
+          console.log(
+            `[ROUTING] CLI Client Localized. Nearest Target: ${optimalNode.id} (${optimalNode.distanceKm} km away) | ISP: ${optimalNode.isp}`,
+          );
+
+          res.writeHead(200, { "Content-Type": "application/json" });
           res.end(
             JSON.stringify({
-              error: "No edge deployment pools available online.",
+              token: secureToken,
+              suggestedNodes: rankedNodes,
             }),
           );
-          return;
+        } catch {
+          res.writeHead(400);
+          res.end("Bad Client Initialization Matrix");
         }
+      });
+      return;
+    }
 
+    if (method === "GET") {
+      const clientId = parsedUrl.searchParams.get("clientId");
+      if (!clientId) {
+        res.writeHead(400, { "Content-Type": "text/plain" });
+        res.end("Bad Request: Missing client identifier token.");
+        return;
+      }
+
+      const clientIp = req.socket.remoteAddress || "127.0.0.1";
+      const resolvedGeo = await resolveClientIpGeo(clientIp);
+
+      let targetNode: Omit<EdgeNode, "lastSeen">;
+
+      if (activeNodes.size > 0) {
         const rankedNodes = Array.from(activeNodes.values()).map((node) => {
           const distanceKm = calculateHaversineDistance(
-            cLat,
-            cLon,
+            resolvedGeo.lat,
+            resolvedGeo.lon,
             node.latitude,
             node.longitude,
           );
-          return {
-            id: node.id,
-            endpoint: `http://${node.host}:${node.port}`,
-            isp: node.isp,
-            city: node.city,
-            distanceKm: parseFloat(distanceKm.toFixed(2)),
-          };
+          return { ...node, distanceKm };
         });
 
         rankedNodes.sort((a, b) => a.distanceKm - b.distanceKm);
-        const optimalNode = rankedNodes[0]!;
-
-        const tokenPayload = JSON.stringify({
-          iss: "nt-pulse-orchestrator",
-          exp: Date.now() + 60000,
-          targetNode: optimalNode.id,
-        });
-        const base64Payload = Buffer.from(tokenPayload).toString("base64");
-        const signature = crypto
-          .createHmac("sha256", ORCHESTRATION_SECRET)
-          .update(tokenPayload)
-          .digest("hex");
-        const secureToken = `${base64Payload}.${signature}`;
-
-        console.log(
-          `[ROUTING] Client Localized. Nearest Target: ${optimalNode.id} (${optimalNode.distanceKm} km away) | ISP: ${optimalNode.isp}`,
-        );
-
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(
-          JSON.stringify({
-            token: secureToken,
-            suggestedNodes: rankedNodes,
-          }),
-        );
-      } catch {
-        res.writeHead(400);
-        res.end("Bad Client Initialization Matrix");
+        targetNode = rankedNodes[0]!;
+      } else {
+        targetNode = {
+          id: `edge-node-4001`,
+          host: "127.0.0.1",
+          port: 4001,
+          wsPort: 4002,
+          latitude: -15.7861,
+          longitude: 35.0058,
+          isp: "Local Loopback Driver",
+          city: "Blantyre",
+        };
       }
-    });
-    return;
+
+      const tokenPayload = JSON.stringify({
+        iss: "nt-pulse-orchestrator",
+        exp: Date.now() + 60000,
+        targetNode: targetNode.id,
+      });
+      const base64Payload = Buffer.from(tokenPayload).toString("base64");
+      const signature = crypto
+        .createHmac("sha256", ORCHESTRATION_SECRET)
+        .update(tokenPayload)
+        .digest("hex");
+      const secureToken = `${base64Payload}.${signature}`;
+
+      console.log(
+        `[ROUTING] UI Handshake [${clientId}] matched with: ${targetNode.id} (${targetNode.isp})`,
+      );
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          id: targetNode.id,
+          host: targetNode.host,
+          port: targetNode.port,
+          wsPort: targetNode.wsPort,
+          latitude: targetNode.latitude,
+          longitude: targetNode.longitude,
+          isp: targetNode.isp,
+          token: secureToken,
+        }),
+      );
+      return;
+    }
   }
 
-  if (url === "/telemetry" && method === "POST") {
+  if (pathname === "/telemetry" && method === "POST") {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
@@ -171,11 +297,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (url === "/metrics" && method === "GET") {
-    res.writeHead(200, {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-    });
+  if (pathname === "/metrics" && method === "GET") {
+    res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
         onlineNodesCount: activeNodes.size,

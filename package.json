@@ -45,15 +45,19 @@
     "build": "tsc",
     "edge": "npm run build && tsx watch src/server.ts",
     "client": "npm run build && tsx watch src/client.ts",
-    "orchestrator": "tsx watch src/orchestrator.ts"
+    "orchestrator": "npx tsc -p tsconfig.worker.json && tsx watch src/orchestrator.ts",
+    "certs": "mkdir -p certs && openssl req -newkey rsa:2048 -nodes -keyout certs/server.key -x509 -days 365 -out certs/server.crt -subj \"//CN=localhost\"",
+    "edge:prod": "NODE_ENV=production npm run build && tsx src/server.ts"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
+    "@types/ws": "^8.18.1",
     "nodemon": "^3.1.14",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "ws": "^8.21.0"
   }
 }

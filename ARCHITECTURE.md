@@ -1,14 +1,16 @@
-# Architecture: NT-Pulse
+# Architecture: NT-Pulse v2
 
-NT-Pulse is a production-grade, distributed real-time network throughput engine engineered in Node.js and TypeScript. It replicates the core architectural patterns of [Fast.com](https://fast.com/) to isolate, measure, and calculate raw bandwidth metrics by eliminating platform overhead and transport layer initialization artifacts.
+NT-Pulse is a production-grade, distributed real-time network throughput engine engineered in Node.js and TypeScript. Version 2 introduces a multi-threaded client execution model, an active health-checking Orchestration matrix, and a high-throughput WebSocket data plane. It isolates, measures, and calculates raw bandwidth metrics by eliminating platform overhead and transport layer initialization artifacts.
 
 ## 1. Core Mathematics
 
-At its foundation, NT-Pulse measures **Bytes over Time ($B/t$)** during a state of total network link saturation.
+At its foundation, NT-Pulse measures **Bytes over Time ($B/t$)** during a state of total network link saturation, explicitly outputting network line capacity in **Megabits per second (Mbps)**.
 
 $$\text{Throughput (Mbps)} = \frac{\text{Payload Size (Bytes)} \times 8}{\text{Sustained Window Time (Seconds)} \times 1,000,000}$$
+_(Note: System implementation utilizes standard binary division $(1024 \times 1024)$ to accurately map Mebibits)_
 
-- **The Numerator (Bytes):** Represents the actual network payload size transferred through the network card interface, completely omitting filesystem cache read states or client runtime heap layer mutations.\* **The Denominator (Time):** Is strictly isolated to the steady-state tracking window where the TCP pipe is fully opened and saturated. This duration intentionally discards the connection handshake latencies and initial window ramp-ups.
+- **The Numerator (bits):** Represents the actual network payload size transferred through the network card interface. Multiplying by 8 converts the payload from storage bytes to transmission bits.
+- **The Denominator (Time):** Is strictly isolated to the steady-state tracking window where the TCP pipe is fully opened and saturated. This duration intentionally discards connection handshake latencies and initial window ramp-ups.
 
 ---
 
@@ -23,76 +25,84 @@ flowchart TD
     classDef analyticsStyle fill:#4f46e5,color:#ffffff,stroke:#4338ca,stroke-width:2px;
 
     %% Tier 1
-    Client["1. Client Application<br/>(CLI / Web / Desktop)"]:::tierStyle
+    subgraph Tier1 ["1. Client Application"]
+        direction TB
+        UI["Main Browser UI Thread<br/>(Renders Diagnostics)"]:::clientStyle
+        Workers["Web Workers Pool<br/>(6 Concurrent Threads)"]:::clientStyle
+        UI -->|Spawns & Monitors| Workers
+    end
 
     %% Tier 2
-    Orchestration["2. Orchestration Tier<br/>(API Gateway / Auth)"]:::tierStyle
+    Orchestration["2. Orchestration Tier<br/>(API Gateway / Auth / Heartbeat TTL)"]:::orchStyle
 
     %% Tier 3 (Distributed Network)
     subgraph Tier3 ["3. Distributed Edge Target Network"]
         direction LR
-        NodeA["Edge Node A<br/>(US-East)<br/>[RAM Streamer]"]:::edgeStyle
-        NodeB["Edge Node B<br/>(EU-West)<br/>[RAM Streamer]"]:::edgeStyle
-        NodeC["Edge Node C<br/>(Asia-East)<br/>[RAM Streamer]"]:::edgeStyle
+        NodeA["Edge Node A<br/>[50MB RAM Buffer WS Streamer]"]:::edgeStyle
+        NodeB["Edge Node B<br/>[50MB RAM Buffer WS Streamer]"]:::edgeStyle
     end
 
     %% Tier 4
-    Analytics["4. Analytics Layer<br/>(TimescaleDB / Redis)"]:::tierStyle
+    Analytics["4. Analytics Layer<br/>(In-Memory Aggregation / Metrics)"]:::analyticsStyle
 
     %% Connections & Flow
-    Client -->|"Get Closest Edges (HTTPS)"| Orchestration
+    UI -->|"POST /discover (Geo Vectors)"| Orchestration
 
-    Orchestration -->|"Queries Optimal Nodes"| NodeA
-    Orchestration -->|"Queries Optimal Nodes"| NodeB
-    Orchestration -->|"Queries Optimal Nodes"| NodeC
+    NodeA <-->|"Heartbeat /register (15s interval)"| Orchestration
+    NodeB <-->|"Heartbeat /register (15s interval)"| Orchestration
 
-    NodeA -->|"Telemetry Data Logs<br/>(Async Worker)"| Analytics
-    NodeB -->|"Telemetry Data Logs<br/>(Async Worker)"| Analytics
-    NodeC -->|"Telemetry Data Logs<br/>(Async Worker)"| Analytics
+    Workers <==>|"Raw WebSocket Chunks (Data Plane)"| NodeA
+
+    UI -->|"POST /telemetry (Session End)"| Analytics
+    Orchestration -->|"Internal Aggregation"| Analytics
+
 ```
 
 ---
 
-## 3. Architectural Breakdown
+## 3. Breakdown
 
-### Tier 1: The Client Engine
+### Multi-Threaded Client Engine
 
-The client application functions as an isolated I/O stress tester. Its lone objective is to intentionally flood the local network path to capacity and track packet ingestion.
-
-- **Responsibilities:**
-  - Initiating pre-flight handshakes to evaluate baseline routing latency profiles.
-  - Multiplexing connections via 4–8 concurrent HTTP/TCP sockets to saturate physical link capacity.
-  - Handling atomic aggregate byte collection without introducing thread-blocking bottlenecks.
-  - Emitting telemetry events at fixed intervals (e.g., every 200ms) to drive live UI updates.
-- **Key Design Pattern:** **Non-Blocking Worker Pools.** Implemented using native Node.js HTTP stream handlers explicitly configured with `agent: false`. This bypasses connection pool reuse policies and forces the operating system to open raw, independent sockets.
-
-### Tier 2: The Orchestration
-
-A lightweight API gateway that functions as the central registry, traffic cop, and authorization wall. Clients must query this tier to discover safe targets before initiating a benchmark run.
+The client application is split across the UI and independent background threads to keep the main render cycle fluid and free from computation bottlenecks.
 
 - **Responsibilities:**
-  - Authenticating incoming client requests and enforcing rate-limiting boundaries to prevent service degradation.
-  - Parsing the client's public ingress IP address to resolve geographic coordinates using a low-latency MaxMind/GeoIP layer.
-  - Running path-sorting logic to match the client with the 3 most optimal edge target nodes.
-- **Key Design Pattern:** **Topology-Aware Geographic Routing.** Computes network topological distance and sorts the node array based on geographic coordinates via the Haversine formula, using a fast Redis layer to cache live node availability states.
+- Parsing the client's local geolocation footprint via native browser APIs.
+- Offloading concurrent network streaming to a dedicated Web Worker pool.
+- Executing barrier synchronization to track total bytes across all independent threads.
 
-### Tier 3: The Distributed Edge Network
+- **Key Design Pattern: Web Worker Pool.** By spawning 6 concurrent background `Worker` threads, the client bypasses browser single-thread limitations, ensuring the CPU does not bottleneck the network interface card (NIC) when calculating incoming byte arrays.
 
-Minimal, hyper-optimized infrastructure instances deployed globally at internet exchange points or edge cloud providers. These nodes handle raw data traffic with zero compute overhead.
+### Orchestration Control Plane
+
+A central API gateway that functions as the registry and authorization wall.
 
 - **Responsibilities:**
-  - Streaming high-volume, endless dummy download streams without hitting local system disks.
-  - Providing an execution black hole endpoint for incoming client upload streams.
-- **Key Design Pattern:** **Zero-Allocation Memory Stream Handlers.** On boot, the server allocates a fixed-size buffer block (e.g., 50MB of randomized bits) directly inside system RAM. All incoming client download streams point straight to this memory buffer using zero-copy stream chunking, isolating performance bottlenecks to the network hardware interface.
+- Validating active edge nodes via a strict 30-second Time-To-Live (TTL) pruning loop.
+- Computing network topological distance using the Haversine formula to match the client with the absolute closest edge target.
+- Generating cryptographically signed HMAC tokens (`exp`, `targetNode`) to prevent unauthorized data-plane saturation.
+
+- **Key Design Pattern: Active Routing Matrix.** Separates the control plane from the data plane. The Orchestrator manages an elastic mesh of standalone Edge Nodes without ever touching the actual speed test payload.
+
+### Distributed Edge Network
+
+Minimal, hyper-optimized infrastructure instances.
+
+- **Responsibilities:**
+- Pinging the Orchestrator every 15 seconds to maintain active status in the routing matrix.
+- Resolving their own public IP, geographic coordinates, and ISP via upstream localization providers upon boot.
+- Streaming high-volume byte chunks down secure WebSocket pipes to authorized clients.
+
+- **Key Design Pattern: Zero-Allocation RAM Buffers.** On boot, the server allocates a fixed-size `Buffer.allocUnsafe(50 * 1024 * 1024)` block inside system RAM. Incoming client streams read sequentially from this buffer in 64KB chunks using a zero-copy pointer loop. This completely bypasses disk I/O, isolating performance bottlenecks strictly to network transport limits.
+- **The v2 Compatibility Pivot:** Initially designed for WebTransport over HTTP/3, the architecture utilizes raw WebSockets (`ws://`). This decision favors high-availability and library stability while mimicking WebTransport's low-overhead streaming characteristics by blasting unformatted binary chunks directly down the TCP pipe.
 
 ### Tier 4: The Analytics & Logging Layer
 
-An out-of-band data engine designed to record and process telemetry tracking info without interrupting active clients.
+An out-of-band data engine designed to record and process telemetry tracking info.
 
 - **Responsibilities:**
-  - Ingesting completed speed metrics logs sent asynchronously from client sessions.
-  - Aggregating metrics by provider, ASN, region, and time to generate network performance profiles.
-- **Key Design Pattern:** **Asynchronous Message Queuing.** Edge nodes and clients dump execution telemetry records to a decoupled message pipeline. Worker routines ingest these items into a time-series storage backend (like TimescaleDB), completely decoupling database write locks from active speed test sessions.
+- Ingesting completed speed metrics logs (`/telemetry`) sent asynchronously from client sessions.
+- Storing temporal session histories and global concurrency states to monitor overall infrastructure saturation.
 
 ---
 
@@ -100,34 +110,24 @@ An out-of-band data engine designed to record and process telemetry tracking inf
 
 Whenever an NT-Pulse testing cycle is triggered, it transitions through five distinct sequential phases:
 
-[Phase 1: Handshake] ────> [Phase 2: Latency] ────> [Phase 3: Warmup] ────> [Phase 4: Sample] ────> [Phase 5: Finalize]
-Auth & Discovery Ping & Jitter TCP Window Bytes Over Time Calculate & Kill
+**`[1. Discovery]` ───> `[2. Allocation]` ────> `[3. Warmup]` ────> `[4. Active Sampling]` ────> `[5. Teardown]**`
 
-### Phase 1: Handshake & Discovery
+### Phase 1: Geo-Discovery & Routing
 
-The client issues a secure HTTPS call to Tier 2 (Orchestration). The API handles token exchange and geolocation mapping, then returns an optimization package containing a signed access token and the routing endpoints of the three nearest Edge Target Nodes.
+The client requests hardware geolocation vectors and dispatches them via `POST` to the Orchestrator. The Orchestrator calculates the Haversine distance against all active nodes in its heartbeat registry and returns the optimal node alongside a time-restricted HMAC token.
 
-### Phase 2: Pre-Flight Latency
+### Phase 2: WebSocket Allocation
 
-Before data streams open, the client fires 5 consecutive HTTP `HEAD` or `OPTIONS` requests to the primary assigned edge endpoint. The runtime tracks network round-trip delays to extract two initial baseline parameters:
+The client UI spawns the Web Worker pool. Each worker initiates a secure WebSocket connection directly to the Edge Node's Data Plane port, passing the HMAC token in the query string. The Edge Node verifies the cryptographic signature before opening the pipe. The current worker pool is defaulted to 6.
 
-- **Ping:** The arithmetic mean of the connection loop times.
-- **Jitter:** The statistical variance between those loop times.
+### Phase 3: Pipe Squeeze (TCP)
 
-### Phase 3: Pipe Squeeze
-
-The client launches its multi-threaded connection worker pool, making simultaneous download requests against the Edge Node. Data streams down for 1.5 to 2.0 seconds. During this window, **all byte counters are ignored**. This gives the client-side environment and the OS transport layer time to scale up the TCP Window Size via the TCP Slow-Start protocol, bringing the path to full saturation.
+Once connected, the Edge Node begins blasting 64KB chunks of RAM buffer down the pipes. For the first initialization window, **all byte counters are ignored**. This gives the client-side environment and the OS transport layer time to scale up the TCP Congestion Window size to its maximum throughput capability.
 
 ### Phase 4: Active Sampling Window
 
-The measurement window opens. The client starts a high-resolution microsecond timer (`performance.now()`) and enables active metric aggregation. As data streams through the concurrent worker sockets, incoming packet lengths are instantly appended to a central atomic counter. In parallel, a decoupled timer triggers every 200ms to calculate interim throughput and pass real-time speed data to the interface.
+The sampling boolean flags to `true`. The client starts a high-resolution microsecond timer (`performance.now()`). As binary packets arrive across all 6 concurrent worker sockets, their byte lengths are continuously appended to a central atomic counter via message passing. A decoupled interval calculates interim Mbps and passes real-time speed data to the UI.
 
 ### Phase 5: Teardown & Finalization
 
-When the execution timer (e.g., 5000ms) expires, the client closes all active connection streams immediately to free system memory. It calculates final throughput against the isolated sampling window metrics and prints the summary. It then sends an out-of-band diagnostic payload back to the analytics layer before exiting cleanly.
-
-## Routing Topology
-
-- Fast.com: Focuses on a Global Distributed CDN architecture. When you visit the site, Netflix's global DNS routing automatically pairs your browser with the geographically closest OCA server inside your local ISP network. It measures how fast you can stream content from the exact location where Netflix video traffic is served.
-
-- NT-Pulse: Uses an Orchestration Gateway Topology. The system separates the control plane from the data plane. The Orchestrator acts as a central command tower, managing an elastic mesh of standalone Edge Nodes. It handles geo-proximity routing via coordinate vectors and issues time-restricted, cryptographically signed HMAC tokens. This makes NT-Pulse highly modular—it can be deployed as a private telemetry mesh inside a enterprise intranet, a localized data center cluster, or a custom nationwide network benchmarking utility.
+When the condition finishes, the main thread signals all active Web Workers to `.terminate()`, instantly severing the TCP pipes and freeing memory. Final throughput is calculated, rendered to the interface
