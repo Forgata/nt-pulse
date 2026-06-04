@@ -3,7 +3,7 @@ services:
     name: nt-pulse-orchestrator
     env: node
     plan: free
-    buildCommand: "npm install && npm run build"
+    buildCommand: "npm install --include=dev && npm run build"
     startCommand: "node dist/orchestrator.js"
     envVars:
       - key: NODE_ENV
@@ -13,7 +13,7 @@ services:
     name: nt-pulse-edge-1
     env: node
     plan: free
-    buildCommand: "npm install && npm run build"
+    buildCommand: "npm install --include=dev && npm run build"
     startCommand: "node dist/server.js"
     envVars:
       - key: NODE_ENV
