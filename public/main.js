@@ -1,4 +1,4 @@
-const GATEWAY_URL = "http://127.0.0.1:4000";
+const GATEWAY_URL = "https://nt-pulse-orchestrator.onrender.com";
 const CONCURRENT_WORKERS = 6;
 
 const elSpeed = document.getElementById("speed-out");
