@@ -66,6 +66,11 @@ export async function registerWithOrchestrator(networkProfile: NetworkProfile) {
       wsEndpoint,
     };
 
+    console.log(
+      "DEBUG: Sending registration payload:",
+      JSON.stringify(registrationPayload, null, 2),
+    );
+
     const orchestratorHost =
       process.env.ORCHESTRATION_HOST || "http://127.0.0.1:4000";
 
