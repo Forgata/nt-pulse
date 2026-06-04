@@ -16,6 +16,7 @@ interface EdgeNode {
   host: string;
   port: number;
   wsPort: number;
+  wsEndpoint: string;
   latitude: number;
   longitude: number;
   isp: string;
@@ -84,12 +85,13 @@ const server = http.createServer(async (req, res) => {
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
       try {
-        const nodeData = JSON.parse(body);
+        const nodeData = JSON.parse(body) as EdgeNode;
 
         if (
           !nodeData.id ||
           !nodeData.port ||
           !nodeData.wsPort ||
+          !nodeData.wsEndpoint ||
           nodeData.latitude == null ||
           nodeData.longitude == null
         ) {
@@ -157,7 +159,7 @@ const server = http.createServer(async (req, res) => {
             );
             return {
               id: node.id,
-              endpoint: `ws://${node.host}:${node.wsPort}/speedtest`,
+              endpoint: node.wsEndpoint,
               isp: node.isp,
               city: node.city,
               distanceKm: parseFloat(distanceKm.toFixed(2)),
@@ -232,6 +234,7 @@ const server = http.createServer(async (req, res) => {
           host: "127.0.0.1",
           port: 4001,
           wsPort: 4002,
+          wsEndpoint: `ws://${targetNode!.host}:${targetNode!.wsPort}`,
           latitude: -15.7861,
           longitude: 35.0058,
           isp: "Local Loopback Driver",
@@ -260,6 +263,7 @@ const server = http.createServer(async (req, res) => {
         JSON.stringify({
           id: targetNode.id,
           host: targetNode.host,
+          wsEndpoint: targetNode.wsEndpoint,
           port: targetNode.port,
           wsPort: targetNode.wsPort,
           latitude: targetNode.latitude,
@@ -313,7 +317,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 setInterval(() => {
-  const TTL_BOUNDARY_MS = 30000;
+  const TTL_BOUNDARY_MS = 60000;
   const now = Date.now();
   for (const [id, node] of activeNodes.entries()) {
     if (now - node.lastSeen > TTL_BOUNDARY_MS) {

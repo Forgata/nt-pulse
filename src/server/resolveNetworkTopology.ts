@@ -58,6 +58,14 @@ export async function registerWithOrchestrator(networkProfile: NetworkProfile) {
       "[BOOT] Dispatching topology profile to orchestrator control plane...",
     );
 
+    const baseURL = process.env.RENDER_EXTERNAL_URL || "http://localhost:4002";
+    const wsEndpoint = `${baseURL.replace("https://", "wss://")}/speedtest`;
+
+    const registrationPayload = {
+      ...networkProfile,
+      wsEndpoint,
+    };
+
     const orchestratorHost =
       process.env.ORCHESTRATION_HOST || "http://127.0.0.1:4000";
 
