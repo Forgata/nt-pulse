@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=settings"
+    />
+    <title>NT-Pulse</title>
+  </head>
+  <body>
+    <header>
+      <div class="title">
+        <h1>NT-PULSE <span class="version">v2.0.0</span></h1>
+        <p>Real Time Network Throughput tester</p>
+      </div>
+      <div class="configs">
+        <div id="global-status" class="system-status">STATUS: IDLE</div>
+        <span class="material-symbols-outlined">settings</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="display-container">
+        <div id="speed-out" class="speed-number">00.00</div>
+        <div id="unit-out" class="speed-unit">Mbps</div>
+      </div>
+      <div class="controls">
+        <button id="trigger-btn">Start Test</button>
+      </div>
+    </main>
+
+    <footer>
+      <div id="diag-toggle" class="diagnostics-toggle">Show Diagnostics</div>
+      <div id="diag-panel" class="diagnostics-panel">
+        <div class="data-row">
+          <span class="label">Target Edge Node:</span>
+          <span id="diag-node" class="value">None</span>
+        </div>
+        <div class="data-row">
+          <span class="label">Geographic Vector:</span>
+          <span id="diag-geo" class="value">0.0000, 0.0000</span>
+        </div>
+        <div class="data-row">
+          <span class="label">Detected Provider (ISP):</span>
+          <span id="diag-isp" class="value">Unresolved</span>
+        </div>
+        <div class="data-row">
+          <span class="label">Warmup Interval:</span>
+          <span class="label"
+            ><span id="diag-warmup" class="value">2000</span> ms</span
+          >
+        </div>
+        <div class="data-row">
+          <span class="label">Sampling Frame:</span>
+          <span class="label"
+            ><span id="diag-sampling" class="value">5000</span> ms</span
+          >
+        </div>
+        <div class="data-row">
+          <span class="label">Active Stream Pipes:</span>
+          <span id="diag-workers" class="value highlight">0 / 6</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>
