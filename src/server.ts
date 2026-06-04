@@ -101,6 +101,7 @@ tcpServer.listen(PORT, "0.0.0.0", async () => {
   setInterval(async () => {
     try {
       await resolveDynamicNetworkProfile(networkProfile);
+      await registerWithOrchestrator(networkProfile);
     } catch (err: any) {
       console.error(
         `[HEARTBEAT] Failed to match orchestrator pulse:`,
