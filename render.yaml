@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: nt-pulse-orchestrator
+    env: node
+    plan: free
+    buildCommand: "npm install && npm run build"
+    startCommand: "node dist/orchestrator.js"
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: nt-pulse-edge-1
+    env: node
+    plan: free
+    buildCommand: "npm install && npm run build"
+    startCommand: "node dist/server.js"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ORCHESTRATION_HOST
+
+        fromService:
+          type: web
+          name: nt-pulse-orchestrator
+          envVarKey: RENDER_EXTERNAL_URL
