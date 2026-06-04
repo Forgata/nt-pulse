@@ -7,7 +7,7 @@ import {
   resolveDynamicNetworkProfile,
 } from "./server/resolveNetworkTopology.js";
 
-const PORT = parseInt(process.env.EDGE_PORT || "4001");
+const PORT = parseInt(process.env.PORT || "4001");
 const WS_PORT = parseInt(process.env.WS_PORT || "4002");
 const CHUNK_SIZE = 64 * 1024;
 
@@ -15,7 +15,7 @@ let networkProfile = {
   id: `edge-node-${PORT}`,
   host: "",
   port: PORT,
-  wsPort: WS_PORT,
+  wsPort: PORT,
   latitude: 0,
   longitude: 0,
   isp: "Resolving...",
@@ -39,8 +39,8 @@ const tcpServer = http.createServer((req, res) => {
   res.end();
 });
 
-function initializeWebSocketPlane() {
-  const wss = new WebSocketServer({ port: WS_PORT, host: "0.0.0.0" });
+function initializeWebSocketPlane(httpServer: http.Server) {
+  const wss = new WebSocketServer({ server: httpServer });
 
   wss.on("connection", (ws, req) => {
     const url = new URL(req.url || "", `http://${req.headers.host}`);
@@ -92,11 +92,11 @@ function initializeWebSocketPlane() {
   );
 }
 
-tcpServer.listen(PORT, async () => {
+tcpServer.listen(PORT, "0.0.0.0", async () => {
   console.log(`[ENGINE] NT-Pulse Control Plane listening on port ${PORT}`);
   await resolveDynamicNetworkProfile(networkProfile);
   await registerWithOrchestrator(networkProfile);
-  initializeWebSocketPlane();
+  initializeWebSocketPlane(tcpServer);
 
   setInterval(async () => {
     try {

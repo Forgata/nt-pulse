@@ -3,7 +3,7 @@ import http from "http";
 import crypto from "crypto";
 import { calculateHaversineDistance } from "./orchestrator/haversineDIstance.js";
 
-const PORT = 4000;
+const PORT = parseInt(process.env.PORT || "4000");
 const ORCHESTRATION_SECRET =
   process.env.ORCHESTRATION_SECRET ||
   "dev-secret-baseline-token-32-chars-minimum";
@@ -325,6 +325,6 @@ setInterval(() => {
   }
 }, 10000);
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`[ORCHESTRATOR] Plane live on port ${PORT}`);
 });
