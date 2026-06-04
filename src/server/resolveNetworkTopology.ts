@@ -74,7 +74,7 @@ export async function registerWithOrchestrator(networkProfile: NetworkProfile) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(networkProfile),
+      body: JSON.stringify(registrationPayload),
     });
 
     if (!response.ok) {
