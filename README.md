@@ -70,8 +70,6 @@ Ensure you have a recent version of Node.js installed. NT-Pulse utilizes standar
 npm install
 ```
 
-````
-
 ### 1. Boot the Orchestrator
 
 Start the central routing and registry gateway on Port 4000:
@@ -104,4 +102,3 @@ npx serve ./public -p 5500
 Open your browser, allow Location access for optimal Haversine routing, and trigger the saturation test to view real-time Mbps telemetry.
 
 ### **[READ THE ARCHITECTURE.md](./ARCHITECTURE.md)**
-````
