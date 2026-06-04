@@ -9,6 +9,9 @@ services:
       - key: NODE_ENV
         value: production
 
+      - key: ORCHESTRATION_SECRET
+        value: "generate-a-long-random-string-here-12345"
+
   - type: web
     name: nt-pulse-edge-1
     env: node
@@ -18,8 +21,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: ORCHESTRATION_HOST
 
+      - key: ORCHESTRATION_SECRET
+        value: "generate-a-long-random-string-here-12345"
+      - key: ORCHESTRATION_HOST
         fromService:
           type: web
           name: nt-pulse-orchestrator
