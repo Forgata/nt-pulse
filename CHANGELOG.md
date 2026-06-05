@@ -4,6 +4,18 @@ All notable changes will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
 
+## [2.1.1] - 2026-06-05
+
+### Added
+
+- **SEO Optimization:** Enhanced the UI's search engine optimization (SEO) to improve visibility in search engines.
+- **Icons**: add site favicon
+- **Dynamic Version**
+
+### Fixed
+
+- UI responsiveness:
+
 ## [2.1.0] - 2026-06-05
 
 ### Added
