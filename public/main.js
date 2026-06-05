@@ -14,12 +14,21 @@ const elDiagGeo = document.getElementById("diag-geo");
 const elDiagIsp = document.getElementById("diag-isp");
 const elDiagWorkers = document.getElementById("diag-workers");
 
+const verSpan = document.querySelector(".version");
+
 let activeWorkers = [];
 let totalBytesAccumulated = 0;
 let bytesSinceLastInterval = 0;
 let calculationIntervalId = null;
 let testStartTime = 0;
 let samplingStarted = false;
+
+window.addEventListener("load", () => {
+  fetch("../package.json")
+    .then((res) => res.json())
+    .then((data) => (verSpan.textContent = `v${data.version}`))
+    .catch((err) => console.err(err));
+});
 
 elDiagToggle.addEventListener("click", () => {
   const isVisible = elDiagPanel.classList.toggle("visible");
