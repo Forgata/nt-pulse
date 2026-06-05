@@ -63,10 +63,20 @@ async function executeTelemetryPipeline() {
         if (!optimalNode)
           throw new Error("No edge deployment pools available online.");
 
+        const nodeEndpoint = optimalNode.endpoint || "";
+
+        if (!nodeEndpoint) {
+          throw new Error(
+            "Orchestrator returned a node without a valid endpoint.",
+          );
+        }
+
+        const url = new URL(nodeEndpoint);
+
         const sessionAllocation = {
           id: optimalNode.id,
-          host: optimalNode.endpoint.split("//")[1].split(":")[0],
-          wsPort: optimalNode.endpoint.split(":")[2].split("/")[0],
+          host: url.hostname,
+          wsPort: url.port || (url.protocol === "wss" ? 443 : 80),
           latitude: optimalNode.latitude,
           longitude: optimalNode.latitude,
           isp: optimalNode.isp,
@@ -105,6 +115,9 @@ async function executeGetFallbackPipeline() {
     const handshakeResponse = await fetch(
       `${GATEWAY_URL}/discover?clientId=${clientUuid}`,
     );
+
+    console.log("DEBUG: Received from Orchestrator:", data);
+
     if (!handshakeResponse.ok)
       throw new Error(
         `Orchestrator rejection: ${handshakeResponse.statusText}`,
@@ -146,6 +159,7 @@ function initializeWorkerPool(endpoint) {
 
     worker.onmessage = (event) => {
       const message = event.data;
+      elSpeed.classList.add("active");
 
       switch (message.type) {
         case "STATUS":
