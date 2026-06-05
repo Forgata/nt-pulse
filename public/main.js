@@ -24,7 +24,7 @@ let testStartTime = 0;
 let samplingStarted = false;
 
 window.addEventListener("load", () => {
-  fetch("../package.json")
+  fetch("./version.json")
     .then((res) => res.json())
     .then((data) => (verSpan.textContent = `v${data.version}`))
     .catch((err) => console.err(err));
