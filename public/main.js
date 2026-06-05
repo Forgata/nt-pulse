@@ -24,7 +24,7 @@ let testStartTime = 0;
 let samplingStarted = false;
 
 window.addEventListener("load", () => {
-  fetch("../package.json")
+  fetch("./version.json")
     .then((res) => res.json())
     .then((data) => (verSpan.textContent = `v${data.version}`))
     .catch((err) => console.err(err));
@@ -39,6 +39,14 @@ elTrigger.addEventListener("click", () => {
   controlDiv.querySelector(".loader")?.remove();
   controlDiv.insertAdjacentHTML("beforeend", '<div class="loader"></div>');
   executeTelemetryPipeline();
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+  executeTelemetryPipeline();
+  elTrigger.disabled = true;
+  if (!document.querySelector(".loader")) {
+    controlDiv.insertAdjacentHTML("beforeend", `<div class="loader"></div>`);
+  }
 });
 
 async function executeTelemetryPipeline() {
@@ -87,7 +95,7 @@ async function executeTelemetryPipeline() {
           host: url.hostname,
           wsPort: url.port || (url.protocol === "wss" ? 443 : 80),
           latitude: optimalNode.latitude,
-          longitude: optimalNode.latitude,
+          longitude: optimalNode.longitude,
           isp: optimalNode.isp,
           token: data.token,
         };
@@ -125,13 +133,13 @@ async function executeGetFallbackPipeline() {
       `${GATEWAY_URL}/discover?clientId=${clientUuid}`,
     );
 
-    console.log("DEBUG: Received from Orchestrator:", data);
-
     if (!handshakeResponse.ok)
       throw new Error(
         `Orchestrator rejection: ${handshakeResponse.statusText}`,
       );
     const sessionAllocation = await handshakeResponse.json();
+
+    console.log("DEBUG: Received from Orchestrator:", sessionAllocation);
 
     if (
       sessionAllocation.host === "localhost" ||

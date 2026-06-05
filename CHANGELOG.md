@@ -4,6 +4,20 @@ All notable changes will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
 
+## [2.1.2] - 2026-06-05
+
+### Added
+
+- **Telemetry Execution**: Added telemetry execution in the UI on `DOMContentLoaded` event for seamless testing.
+
+### Improved
+
+- **JavaScript load time**: Reduced the load time by using the `<script>` tag's `defer` to load the main.js and optimise `DOMContentLoaded`.
+
+### Fixed
+
+- **Dynamic Versioning**: Fixed versioning update in the Client UI since `/public` doesn't serve files outside its directory.
+
 ## [2.1.1] - 2026-06-05
 
 ### Added
