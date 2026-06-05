@@ -4,6 +4,24 @@ All notable changes will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
 
+## [2.1.0] - 2026-06-05
+
+### Added
+
+- **Production-Ready Client Deployment Pipeline:** Integrated support for static site hosting (Vercel) for the UI layer, enabling global edge delivery of the dashboard.
+- **Defensive Handshake Parsing:** Implemented robust response validation in `main.js` to handle non-200 status codes (like 503 Service Unavailable) gracefully. Added safety checks to token splitting routines to prevent runtime crashes during orchestration failure.
+- **Automatic Heartbeat Re-registration:** Updated the Edge Node heartbeat loop to include an explicit `registerWithOrchestrator` call every 15 seconds. This ensures continuous TTL reset on the Orchestrator, preventing node pruning and maintaining active routing availability.
+
+### Fixed
+
+- **Handshake-to-Socket Race Condition:** Resolved a critical UI crash where the `main.js` client attempted to access `.split()` on an undefined token when the Orchestrator returned an empty or error-state discovery response.
+- **WebSocket Secure Protocol Hardening:** Updated client-side connection logic to enforce secure WebSocket protocols (`wss://`) in alignment with modern browser security policies required for HTTPS-hosted client UIs.
+- **Orchestrator Registration Payload Integrity:** Fixed a registration bug where the `wsEndpoint` was missing from the edge node's registration payload, causing validation rejections and subsequent "Service Unavailable" errors at the discovery stage.
+
+### Changed
+
+- **UI/Backend CORS Optimization:** Configured `Access-Control-Allow-Origin` headers on the Orchestrator to support cross-origin requests specifically from deployed UI environments, ensuring seamless communication between the Vercel-hosted frontend and the Render-hosted backend.
+
 ## [2.0.0] - 2026-06-04
 
 ### Added
