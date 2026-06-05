@@ -1,20 +1,28 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { execFileSync } from "node:child_process";
 
 const currentDir = import.meta.dirname;
 
-const packageJsonPath = path.resolve(currentDir, "../package.json");
-const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+try {
+  const packageJsonPath = path.resolve(currentDir, "../package.json");
+  const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-const outputPath = path.join(currentDir, "../public/version.json");
+  const outputPath = path.join(currentDir, "../public/version.json");
 
-fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-fs.writeFileSync(outputPath, JSON.stringify({ version: pkg.version }, null, 2));
+  fs.writeFileSync(
+    outputPath,
+    JSON.stringify({ version: pkg.version }, null, 2),
+  );
 
-execSync(`git add "${outputPath}"`);
+  execFileSync("git", ["add", outputPath]);
 
-console.log(
-  `Synced v${pkg.version} to public/version.json and staged for Git.`,
-);
+  console.log(
+    `Synced v${pkg.version} to public/version.json and staged for Git.`,
+  );
+} catch (error: Error | any) {
+  console.error("Failed to sync version:", error.message);
+  process.exit(1);
+}

@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- **Telemetry Execution**: Added telemetry execution in the UI on `DOMContentLoaded` event for seemless testing.
+- **Telemetry Execution**: Added telemetry execution in the UI on `DOMContentLoaded` event for seamless testing.
 
 ### Improved
 
@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
-- **Dynamic Versioning**: fixed versioning update in the Client UI since `/public` doesnt serve files outside its directory.
+- **Dynamic Versioning**: Fixed versioning update in the Client UI since `/public` doesn't serve files outside its directory.
 
 ## [2.1.1] - 2026-06-05
 
