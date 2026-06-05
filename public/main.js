@@ -27,7 +27,7 @@ window.addEventListener("load", () => {
   fetch("./version.json")
     .then((res) => res.json())
     .then((data) => (verSpan.textContent = `v${data.version}`))
-    .catch((err) => console.err(err));
+    .catch((err) => console.error(err));
 });
 
 elDiagToggle.addEventListener("click", () => {
