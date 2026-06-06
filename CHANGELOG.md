@@ -4,6 +4,18 @@ All notable changes will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
 
+## [2.1.3] - 2026-06-07
+
+### Added
+
+- Styling for test status display.
+- `size` attribute to the `<link rel="icon">` for better compatibility.
+
+### Fixed
+
+- Canonical link to point to main site [nt-pulse](https://nt-pulse.vercel.app/).
+- Test execution workflow and UI feedback during telemetry tests.
+
 ## [2.1.2] - 2026-06-05
 
 ### Added

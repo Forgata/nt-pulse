@@ -211,6 +211,13 @@ section.diagnostics {
   }
 }
 
+.test-status {
+  font-size: small;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--text-muted);
+}
+
 footer {
   width: 100%;
   max-width: 600px;

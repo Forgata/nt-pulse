@@ -43,13 +43,36 @@
       content="uZDVD45jdQGW15DL31kHWiLVsjfWvqA-wB4CSjJ4kO8"
     />
 
-    <link rel="canonical" href="https://your-primary-domain.com/" />
+    <link rel="canonical" href="https://nt-pulse.vercel.app/" />
     <link rel="stylesheet" href="style.css" />
-    <link rel="icon" href="favicon.png" type="image/png" />
+    <link rel="icon" href="favicon.png" type="image/png" sizes="512x512" />
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
       rel="stylesheet"
     />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "NT-Pulse",
+        "url": "https://nt-pulse.vercel.app/",
+        "description": "A lightweight, high-density real-time network throughput tester to analyze bare-metal connection performance.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "All",
+        "author": {
+          "@type": "Person",
+          "name": "Forgata",
+          "url": "https://github.com/Forgata"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
     <title>NT Pulse | Real Time Network Throughput</title>
   </head>
   <body>
@@ -75,7 +98,15 @@
     </main>
 
     <section class="diagnostics">
-      <div id="diag-toggle" class="diagnostics-toggle">Show Diagnostics</div>
+      <div
+        role="button"
+        id="diag-toggle"
+        class="diagnostics-toggle"
+        aria-expanded="false"
+        aria-controls="diag-panel"
+      >
+        Show Diagnostics
+      </div>
       <div id="diag-panel" class="diagnostics-panel">
         <dl>
           <div class="data-row">
