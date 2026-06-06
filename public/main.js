@@ -36,16 +36,32 @@ elDiagToggle.addEventListener("click", () => {
 });
 
 elTrigger.addEventListener("click", () => {
+  if (elTrigger) {
+    elTrigger.disabled = true;
+    elTrigger.remove();
+  }
+
   controlDiv.querySelector(".loader")?.remove();
   controlDiv.insertAdjacentHTML("beforeend", '<div class="loader"></div>');
+  controlDiv.insertAdjacentHTML(
+    "beforeend",
+    `<p class="test-status">Running Test ...</p>`,
+  );
   executeTelemetryPipeline();
 });
 
 window.addEventListener("DOMContentLoaded", () => {
   executeTelemetryPipeline();
-  elTrigger.disabled = true;
   if (!document.querySelector(".loader")) {
     controlDiv.insertAdjacentHTML("beforeend", `<div class="loader"></div>`);
+    controlDiv.insertAdjacentHTML(
+      "beforeend",
+      `<p class="test-status">Running Test...</p>`,
+    );
+  }
+  if (elTrigger) {
+    elTrigger.disabled = true;
+    elTrigger.remove();
   }
 });
 
@@ -262,10 +278,16 @@ function concludeTelemetryTest() {
 
   elSpeed.innerText = finalMbps.toFixed(2);
   elSpeed.classList.remove("active");
-  elTrigger.disabled = false;
+
+  if (elTrigger) {
+    elTrigger.disabled = false;
+    controlDiv.append(elTrigger);
+  }
+
   const loader = controlDiv.querySelector(".loader");
   if (loader) {
     loader.remove();
+    document.querySelector(".test-status")?.remove();
   }
 
   updateUIStatus("COMPLETE", "Saturate execution sequence finished cleanly.");
@@ -291,7 +313,10 @@ function teardownTelemetryState() {
   activeWorkers.forEach((worker) => worker.terminate());
   activeWorkers = [];
 
-  elTrigger.disabled = false;
+  if (elTrigger) {
+    elTrigger.disabled = false;
+    controlDiv.append(elTrigger);
+  }
 }
 
 function updateUIStatus(status, textLog) {
