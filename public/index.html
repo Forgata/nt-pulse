@@ -98,7 +98,15 @@
     </main>
 
     <section class="diagnostics">
-      <h2 id="diag-toggle" class="diagnostics-toggle">Show Diagnostics</h2>
+      <div
+        role="button"
+        id="diag-toggle"
+        class="diagnostics-toggle"
+        aria-expanded="false"
+        aria-controls="diag-panel"
+      >
+        Show Diagnostics
+      </div>
       <div id="diag-panel" class="diagnostics-panel">
         <dl>
           <div class="data-row">
