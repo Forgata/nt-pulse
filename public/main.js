@@ -36,17 +36,15 @@ elDiagToggle.addEventListener("click", () => {
 });
 
 elTrigger.addEventListener("click", () => {
-  if (elTrigger) {
-    elTrigger.disabled = true;
-    elTrigger.remove();
-  }
-
   controlDiv.querySelector(".loader")?.remove();
+  controlDiv.querySelector(".test-status")?.remove();
+
   controlDiv.insertAdjacentHTML("beforeend", '<div class="loader"></div>');
   controlDiv.insertAdjacentHTML(
     "beforeend",
-    `<p class="test-status">Running Test ...</p>`,
+    `<p class="test-status">Running Test</p>`,
   );
+
   executeTelemetryPipeline();
 });
 
@@ -56,7 +54,7 @@ window.addEventListener("DOMContentLoaded", () => {
     controlDiv.insertAdjacentHTML("beforeend", `<div class="loader"></div>`);
     controlDiv.insertAdjacentHTML(
       "beforeend",
-      `<p class="test-status">Running Test...</p>`,
+      `<p class="test-status">Running Test</p>`,
     );
   }
   if (elTrigger) {
@@ -299,7 +297,11 @@ function resetTelemetryState() {
   bytesSinceLastInterval = 0;
   samplingStarted = false;
   elSpeed.innerText = "00.00";
-  elTrigger.disabled = true;
+
+  if (elTrigger) {
+    elTrigger.disabled = true;
+    elTrigger.remove();
+  }
 
   elDiagWorkers.innerText = `0 / ${CONCURRENT_WORKERS}`;
 }
