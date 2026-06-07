@@ -1,5 +1,29 @@
 const GATEWAY_URL = "https://nt-pulse-orchestrator.onrender.com";
-const CONCURRENT_WORKERS = 6;
+const workerPoolCount = document.getElementById("worker-pool");
+let CONCURRENT_WORKERS = parseInt(workerPoolCount.value, 10);
+
+workerPoolCount.addEventListener("input", (e) => {
+  const min = parseInt(e.target.min, 10);
+  const max = parseInt(e.target.max, 10);
+  let val = parseInt(e.target.value, 10);
+
+  if (isNaN(val)) return;
+
+  if (val > max) {
+    val = max;
+    e.target.value = max;
+  }
+  if (val < min) {
+    val = min;
+    e.target.value = min;
+  }
+
+  CONCURRENT_WORKERS = val;
+});
+
+workerPoolCount.addEventListener("blur", (e) => {
+  if (!e.target.value) e.target.value = CONCURRENT_WORKERS;
+});
 
 const elSpeed = document.getElementById("speed-out");
 const elUnit = document.getElementById("unit-out");
@@ -64,6 +88,10 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 async function executeTelemetryPipeline() {
+  if (workerPoolCount) {
+    workerPoolCount.disabled = true;
+    workerPoolCount.style.cursor = "not-allowed";
+  }
   resetTelemetryState();
   updateUIStatus("DISCOVERING", "Querying orchestrator routing matrix...");
 
@@ -288,6 +316,11 @@ function concludeTelemetryTest() {
     document.querySelector(".test-status")?.remove();
   }
 
+  if (workerPoolCount) {
+    workerPoolCount.disabled = false;
+    workerPoolCount.style.cursor = "pointer";
+  }
+
   updateUIStatus("COMPLETE", "Saturate execution sequence finished cleanly.");
 }
 
@@ -318,6 +351,11 @@ function teardownTelemetryState() {
   if (elTrigger) {
     elTrigger.disabled = false;
     controlDiv.append(elTrigger);
+  }
+
+  if (workerPoolCount) {
+    workerPoolCount.disabled = true;
+    workerPoolCount.style.cursor = "not-allowed";
   }
 }
 
