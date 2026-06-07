@@ -4,6 +4,27 @@ All notable changes will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
 
+## [2.1.4] - 2026-06-07
+
+### Added
+
+- **Dynamic Thread Throttling**: Rebuilt the Worker Thread pool constraint logic to actively prevent manually entered user inputs above `6` or below `1`.
+- **Runtime Null Safety**: Fixed an unhandled telemetry engine crash when backspacing input values, cleanly bypassing execution failures caused by `NaN` states.
+- **State Synchronization**: Automated global state synchronization to ensure runtime variables actively track preference changes instantly.
+
+### Improved
+
+- **Clinical Light Theme**: Implemented a responsive design token architecture (`data-theme="light"`) leveraging accessible, high-contrast palette variants optimized for bright environments.
+- **Contextual Layout Variables**: Refactored static, hardcoded background colors into semantic properties to keep element layouts seamless across active UI workspace states.
+- **Drop-Down Geometry Alignment**: Relocated the Preferences UI inside the configurations header wrapper, ensuring pixel-perfect top-right alignment underneath the settings icon on all viewports.
+- **Anti-Flash Color Interpolation**: Applied unified CSS component transitions across all structural nodes to prevent raw layout flashes during live theme switching.
+
+### Fixed
+
+- **Event Propagation Patch**: Mitigated a structural event-bubbling glitch that forced the preferences overlay modal to instantly close when clicking internal configuration options.
+- **Adaptive Toggle Icons**: Resolved a visual state-sync bug where the theme toggle icon failed to refresh its internal glyph state when clicking the configuration buttons.
+- **Input Blur Recovery**: Integrated field validation triggers to gracefully roll back baseline functional defaults if user inputs are abandoned blank.
+
 ## [2.1.3] - 2026-06-07
 
 ### Added

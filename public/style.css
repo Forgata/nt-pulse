@@ -2,11 +2,31 @@
 
 :root {
   --bg-color: #050505;
+  --panel-bg: #090909;
+  --panel-bg-alt: #111111;
+  --border-color: #1a1a1a;
+  --border-input: #ffffff;
   --text-main: #e0e0e0;
   --text-muted: #555555;
   --accent: #00ff66;
   --accent-warn: #ffb300;
   --font-stack: "M PLUS 1 Code", monospace;
+
+  --theme-transition:
+    background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    outline-color 0.2s ease;
+}
+
+:root[data-theme="light"] {
+  --bg-color: #f6f8fa;
+  --panel-bg: #ffffff;
+  --panel-bg-alt: #edf0f2;
+  --border-color: #d1d5db;
+  --border-input: #111827;
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --accent: #059669;
+  --accent-warn: #d97706;
 }
 
 .material-symbols-outlined {
@@ -33,16 +53,18 @@ body {
   min-height: 100vh;
   padding: 2rem;
   overflow-x: hidden;
+  transition: var(--theme-transition);
 }
 
 header {
   letter-spacing: -0.02em;
   padding-inline: 0.5rem;
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: var(--theme-transition);
 }
 
 header .title h1 {
@@ -53,6 +75,7 @@ header .version {
   font-size: 0.89rem;
   color: var(--text-muted);
   font-family: var(--font-stack);
+  transition: var(--theme-transition);
 }
 
 header .configs {
@@ -60,6 +83,7 @@ header .configs {
   align-items: center;
   gap: 2rem;
   justify-content: center;
+  position: relative;
 }
 
 header .configs span {
@@ -72,6 +96,7 @@ header p {
 
 .system-status {
   color: var(--text-muted);
+  transition: var(--theme-transition);
 }
 
 main {
@@ -94,7 +119,7 @@ main {
   line-height: 1;
   letter-spacing: -0.04em;
   color: var(--text-main);
-  transition: color 0.2s ease;
+  transition: var(--theme-transition);
   font-family: "M PLUS 1";
 }
 
@@ -106,13 +131,13 @@ main {
   font-size: 1.25rem;
   color: var(--text-muted);
   margin-top: 0.5rem;
-  /* text-transform: uppercase; */
   letter-spacing: 0.1em;
+  transition: var(--theme-transition);
 }
 
 button {
   background: transparent;
-  border: 1px solid #222;
+  border: 1px solid var(--border-color);
   color: var(--text-main);
   font-family: var(--font-stack);
   padding: 0.75rem 2rem;
@@ -120,17 +145,17 @@ button {
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all 0.15s ease;
+  transition: var(--theme-transition);
 }
 
 button:hover {
-  background: #111;
+  background: var(--panel-bg-alt);
   border-color: var(--accent);
   color: var(--accent);
 }
 
 button:disabled {
-  border-color: #111;
+  border-color: var(--border-color);
   color: var(--text-muted);
   background: transparent;
   cursor: not-allowed;
@@ -150,6 +175,7 @@ section.diagnostics {
   text-transform: uppercase;
   margin-bottom: 1rem;
   user-select: none;
+  transition: var(--theme-transition);
 }
 
 .diagnostics-toggle:hover {
@@ -157,12 +183,13 @@ section.diagnostics {
 }
 
 .diagnostics-panel {
-  background: #090909;
-  border: 1px solid #111;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
   padding: 1rem;
   font-size: 0.8rem;
   display: none;
   font-family: "M Plus 1";
+  transition: var(--theme-transition);
 }
 
 .diagnostics-panel.visible {
@@ -181,10 +208,12 @@ section.diagnostics {
 
 .label {
   color: var(--text-muted);
+  transition: var(--theme-transition);
 }
 
 .value {
   color: var(--text-main);
+  transition: var(--theme-transition);
 }
 
 .value.highlight {
@@ -202,9 +231,12 @@ section.diagnostics {
 .loader {
   width: 130px;
   height: 20px;
-  background: linear-gradient(#ddd 0 0) 0/0% no-repeat #000;
+  background: linear-gradient(var(--text-main) 0 0) 0/0% no-repeat
+    var(--panel-bg-alt);
   animation: l1 2s infinite linear;
+  transition: var(--theme-transition);
 }
+
 @keyframes l1 {
   100% {
     background-size: 100%;
@@ -216,6 +248,7 @@ section.diagnostics {
   text-transform: uppercase;
   letter-spacing: 0.25em;
   color: var(--text-muted);
+  transition: var(--theme-transition);
 }
 
 footer {
@@ -223,13 +256,14 @@ footer {
   max-width: 600px;
   margin: 4rem auto 0 auto;
   padding-top: 1rem;
-  border-top: 1px solid #111;
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.85rem;
   letter-spacing: 0.02em;
   color: var(--text-muted);
+  transition: var(--theme-transition);
 }
 
 footer .footer-left {
@@ -245,7 +279,7 @@ footer .footer-left {
 footer a {
   color: var(--text-muted);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: var(--theme-transition);
 }
 
 footer a:hover {
@@ -258,8 +292,87 @@ footer .footer-right {
 }
 
 footer .separator {
-  color: #1a1a1a;
+  color: var(--border-color);
   user-select: none;
+  transition: var(--theme-transition);
+}
+
+.preferences {
+  font-family: "M PLUS 1";
+  height: auto;
+  min-width: 250px;
+  max-width: auto;
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  z-index: 100;
+
+  background: var(--panel-bg-alt);
+  padding: 1.6rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  transition: var(--theme-transition);
+}
+
+.pref-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  user-select: none;
+  transition: var(--theme-transition);
+}
+
+.option > span {
+  cursor: pointer;
+  transition: var(--theme-transition);
+}
+
+.option > span:hover {
+  color: var(--accent);
+}
+
+.option > input {
+  width: 70px;
+  padding: 0.3rem 0.75rem;
+  border: none;
+  outline: 1px solid var(--border-input);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--text-main);
+  transition: var(--theme-transition);
+}
+
+.option > input:focus {
+  outline: 1.5px solid var(--accent);
+}
+
+.preferences.active {
+  display: flex;
+}
+
+.fi.fi-mw {
+  padding: 0 1rem;
 }
 
 @media (width < 660px) {
@@ -293,7 +406,7 @@ footer .separator {
     font-size: smaller;
   }
 
-  .footer-left span:nth-of-type(2) {
+  .footer-left span:nth-of-type(3) {
     display: none;
   }
 }
@@ -309,5 +422,11 @@ footer .separator {
 
   .diagnostics-panel {
     font-size: x-small;
+  }
+}
+
+@media (width <= 320px) {
+  .footer-left span:nth-of-type(2) {
+    display: none;
   }
 }

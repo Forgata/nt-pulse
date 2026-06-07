@@ -50,6 +50,10 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css"
+    />
 
     <script type="application/ld+json">
       {
@@ -83,7 +87,36 @@
       </div>
       <div class="configs">
         <div id="global-status" class="system-status">STATUS: IDLE</div>
-        <span class="material-symbols-outlined">settings</span>
+        <span id="settings-btn" class="material-symbols-outlined"
+          >settings</span
+        >
+        <section class="preferences">
+          <div class="pref-header">
+            <h3>Preferences</h3>
+            <span id="close-pref" class="material-symbols-outlined">close</span>
+          </div>
+          <div class="options">
+            <div class="option">
+              <h4>Theme</h4>
+              <span id="theme-btn" class="material-symbols-outlined"
+                >dark_mode</span
+              >
+            </div>
+
+            <div class="option">
+              <h4>Worker Threads</h4>
+              <input
+                type="number"
+                name="worker-pool"
+                id="worker-pool"
+                max="6"
+                value="2"
+                min="1"
+                step="1"
+              />
+            </div>
+          </div>
+        </section>
       </div>
     </header>
 
@@ -98,15 +131,7 @@
     </main>
 
     <section class="diagnostics">
-      <div
-        role="button"
-        id="diag-toggle"
-        class="diagnostics-toggle"
-        aria-expanded="false"
-        aria-controls="diag-panel"
-      >
-        Show Diagnostics
-      </div>
+      <div id="diag-toggle" class="diagnostics-toggle">Show Diagnostics</div>
       <div id="diag-panel" class="diagnostics-panel">
         <dl>
           <div class="data-row">
@@ -147,7 +172,7 @@
         <span class="material-symbols-outlined"> copyright </span> 2026
         <a href="https://github.com/Forgata" target="_blank" rel="noopener"
           >Forgata</a
-        ><span>NT-PULSE Contributors</span>.
+        ><span class="fi fi-mw"></span><span>NT-PULSE Contributors</span>.
         <a
           href="https://github.com/Forgata/nt-pulse#MIT-1-ov-file"
           target="_blank"
@@ -176,5 +201,6 @@
     </footer>
 
     <script src="main.js" defer></script>
+    <script src="./utilities/renderSettings.js" defer></script>
   </body>
 </html>
