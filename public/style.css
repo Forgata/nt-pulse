@@ -110,6 +110,7 @@ main {
 }
 
 .display-container {
+  margin-top: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -246,9 +247,54 @@ section.diagnostics {
 .test-status {
   font-size: small;
   text-transform: uppercase;
+  padding-bottom: 2rem;
   letter-spacing: 0.25em;
   color: var(--text-muted);
   transition: var(--theme-transition);
+}
+
+.ai-summary {
+  max-width: 600px;
+  font-size: 0.8rem;
+  font-family: "M Plus 1";
+  padding: 1rem;
+  color: var(--text-main);
+  transition: var(--theme-transition);
+}
+
+.ai-loader {
+  width: 5px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: l5 1s infinite linear alternate;
+  display: block;
+  margin: 2rem auto;
+}
+@keyframes l5 {
+  0% {
+    box-shadow:
+      10px 0 var(--text-main),
+      -10px 0 var(--text-muted);
+    background: var(--text-main);
+  }
+  33% {
+    box-shadow:
+      10px 0 var(--text-main),
+      -10px 0 var(--text-muted);
+    background: var(--text-muted);
+  }
+  66% {
+    box-shadow:
+      10px 0 var(--text-muted),
+      -10px 0 var(--text-main);
+    background: var(--text-muted);
+  }
+  100% {
+    box-shadow:
+      10px 0 var(--text-muted),
+      -10px 0 var(--text-main);
+    background: var(--text-main);
+  }
 }
 
 footer {
@@ -399,6 +445,10 @@ footer .separator {
     font-size: 4rem;
   }
 
+  .ai-summary {
+    font-size: small;
+  }
+
   footer {
     flex-direction: column;
     gap: 0.5rem;
@@ -421,6 +471,10 @@ footer .separator {
   }
 
   .diagnostics-panel {
+    font-size: x-small;
+  }
+
+  .ai-summary {
     font-size: x-small;
   }
 }
