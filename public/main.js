@@ -62,6 +62,8 @@ elDiagToggle.addEventListener("click", () => {
 elTrigger.addEventListener("click", () => {
   controlDiv.querySelector(".loader")?.remove();
   controlDiv.querySelector(".test-status")?.remove();
+  controlDiv.querySelector(".ai-summary")?.remove();
+  controlDiv.querySelector(".ai-loader")?.remove();
 
   controlDiv.insertAdjacentHTML("beforeend", '<div class="loader"></div>');
   controlDiv.insertAdjacentHTML(
@@ -216,7 +218,7 @@ function initializeWorkerPool(endpoint) {
       teardownTelemetryState();
     };
 
-    worker.onmessage = (event) => {
+    worker.onmessage = async (event) => {
       const message = event.data;
       elSpeed.classList.add("active");
 
@@ -242,7 +244,7 @@ function initializeWorkerPool(endpoint) {
           } else if (message.status === "COMPLETE") {
             workersFinishedCount++;
             if (workersFinishedCount === CONCURRENT_WORKERS) {
-              concludeTelemetryTest();
+              await concludeTelemetryTest();
             }
           }
           break;
@@ -305,15 +307,15 @@ function concludeTelemetryTest() {
   elSpeed.innerText = finalMbps.toFixed(2);
   elSpeed.classList.remove("active");
 
-  if (elTrigger) {
-    elTrigger.disabled = false;
-    controlDiv.append(elTrigger);
-  }
-
   const loader = controlDiv.querySelector(".loader");
   if (loader) {
     loader.remove();
     document.querySelector(".test-status")?.remove();
+  }
+
+  if (elTrigger) {
+    elTrigger.disabled = false;
+    controlDiv.append(elTrigger);
   }
 
   if (workerPoolCount) {
@@ -322,6 +324,27 @@ function concludeTelemetryTest() {
   }
 
   updateUIStatus("COMPLETE", "Saturate execution sequence finished cleanly.");
+
+  const snapshotSummaryEl = document.createElement("p");
+  snapshotSummaryEl.className = "ai-loader";
+  controlDiv.append(snapshotSummaryEl);
+
+  fetchSpeedSummary(finalMbps)
+    .then((aiSummary) => {
+      if (snapshotSummaryEl && snapshotSummaryEl.parentNode) {
+        snapshotSummaryEl.classList.remove("ai-loader");
+        snapshotSummaryEl.classList.add("ai-summary");
+        snapshotSummaryEl.innerText = aiSummary || "";
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to parse speed summary:", err);
+      if (snapshotSummaryEl && snapshotSummaryEl.parentNode) {
+        snapshotSummaryEl.classList.remove("ai-loader");
+        snapshotSummaryEl.classList.add("ai-summary");
+        snapshotSummaryEl.innerText = "";
+      }
+    });
 }
 
 function resetTelemetryState() {
@@ -368,4 +391,17 @@ function renderDiagnosticCard(alloc) {
   elDiagNode.innerText = alloc.id;
   elDiagGeo.innerText = `${alloc.latitude.toFixed(4)}, ${alloc.longitude.toFixed(4)}`;
   elDiagIsp.innerText = alloc.isp;
+}
+
+async function fetchSpeedSummary(mbps) {
+  const response = await fetch("/api/speed-summary", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mbps: mbps }),
+  });
+
+  if (!response.ok) return "";
+
+  const data = await response.json();
+  return data.summary;
 }

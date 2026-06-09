@@ -34,7 +34,15 @@ The data plane infrastructure. To eliminate file-system read latency and SSD bot
 - **WebSocket Streaming:** Authenticates incoming client tokens via the query string and streams the raw RAM buffer in 64KB sequential chunks infinitely over the `wss://` pipe.
 - **Dual-Plane:** Listens on HTTP (Port 4001) for initialization and topology resolution, while isolating high-throughput WebSocket traffic to a dedicated port (Port 4002).
 
-### 4. Analytics
+### 4.Serverless AI Diagnostics (New in v2.2.0)
+
+Hosted securely on Vercel's Edge network, a dedicated Node.js serverless function (/api/speed-summary.js) safely proxies final telemetry metrics to Google's ultra-low-latency gemini-3.1-flash-lite model.
+
+- Sub-Second TTFT: Provides instant, single-sentence network engineering insights.
+
+- Credential Isolation: Keeps the GEMINI_API_KEY entirely shielded from the client browser within a secure backend container.
+
+### 5. Analytics
 
 An out-of-band ingestion pipeline integrated directly into the Orchestrator. When a client finishes a test run, it fires a `POST /telemetry` payload containing final Mbps throughput and execution duration. This data is exposed via a `/metrics` route to monitor global infrastructure saturation and node health.
 
@@ -53,6 +61,7 @@ Ensure these variables are configured in your hosting environment (Render/Vercel
 | `ORCHESTRATION_SECRET` | Yes      | 32+ char string for HMAC-SHA256 token signing.                                     |
 | `GATEWAY_URL`          | Yes      | The URL of your Orchestrator (e.g., `https://nt-pulse-orchestrator.onrender.com`). |
 | `RENDER_EXTERNAL_URL`  | Yes      | Set to your public-facing URL (used by Edge Nodes to register).                    |
+| `GEMINI_API_KEY`       | Yes      | Google AI token for the Serverless Diagnostics engine(Vercel).                     |
 
 ### 2. Development (Local Mode)
 

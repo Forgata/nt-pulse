@@ -4,6 +4,24 @@ All notable changes will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
 
+## [2.2.0] - 2026-06-09
+
+### Added
+
+- **AI-Powered Diagnostics:** Integrated Google's ultra-low-latency `gemini-3.1-flash-lite` model via the REST API to deliver instant, single-sentence telemetry summaries for network performance.
+- **Serverless Architecture:** Created a secure Node.js serverless function handler at `/api/speed-summary.js` to decouple AI generation logic from the client-side presentation layer.
+- **Centered Loading UX:** Designed a pure CSS 3-dot pulse animation (`.ai-loader`) utilizing horizontal `box-shadow` shifting and automated margin calculations (`margin: 2rem auto`) for perfect symmetry on the dark-mode panel grid layer.
+
+### Changed
+
+- **Client Routing:** Updated frontend network pipelines to route traffic locally through relative endpoints (`/api/speed-summary?mbps=${finalMbps}`), completely abstracting target upstream URLs from the browser.
+- **DOM Instantiation Strategy:** Refactored runtime element initialization from raw `insertAdjacentHTML` string parsing to clean, memory-allocated `document.createElement("p")` references. This guarantees zero async reference errors if multi-test overlapping occurs.
+- **Style Isolation:** Separated the initial loading state (`.ai-loader`) from the text layout wrapper (`.ai-summary`) during element birth, eliminating visual padding collisions (`padding: 1rem`) while the background API promise resolves.
+
+### Security
+
+- **Credential Protection:** Migrated the `GEMINI_API_KEY` token entirely out of front-facing code asset directories into Vercel’s isolated runtime environment container (`process.env`). This entirely blocks public exposure and client-side credential sniffing.
+
 ## [2.1.4] - 2026-06-07
 
 ### Added
