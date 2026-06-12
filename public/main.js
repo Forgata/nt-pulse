@@ -390,7 +390,7 @@ function updateUIStatus(status, textLog) {
 function renderDiagnosticCard(alloc) {
   elDiagNode.innerText = alloc.id;
   elDiagGeo.innerText = `${alloc.latitude.toFixed(4)}, ${alloc.longitude.toFixed(4)}`;
-  elDiagIsp.innerText = alloc.clientIsp;
+  elDiagIsp.innerText = alloc.isp;
 }
 
 async function fetchSpeedSummary(mbps) {
