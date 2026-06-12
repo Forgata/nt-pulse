@@ -138,9 +138,9 @@ async function executeTelemetryPipeline() {
           id: optimalNode.id,
           host: url.hostname,
           wsPort: url.port || (url.protocol === "wss" ? 443 : 80),
-          latitude: optimalNode.latitude,
-          longitude: optimalNode.longitude,
-          isp: optimalNode.isp,
+          latitude: clientCoordinates.latitude,
+          longitude: clientCoordinates.longitude,
+          isp: data.clientIsp,
           token: data.token,
         };
 
@@ -390,7 +390,7 @@ function updateUIStatus(status, textLog) {
 function renderDiagnosticCard(alloc) {
   elDiagNode.innerText = alloc.id;
   elDiagGeo.innerText = `${alloc.latitude.toFixed(4)}, ${alloc.longitude.toFixed(4)}`;
-  elDiagIsp.innerText = alloc.isp;
+  elDiagIsp.innerText = alloc.clientIsp;
 }
 
 async function fetchSpeedSummary(mbps) {
