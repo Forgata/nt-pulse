@@ -128,7 +128,8 @@ const server = http.createServer(async (req, res) => {
     if (method === "POST") {
       let body = "";
       req.on("data", (chunk) => (body += chunk));
-      req.on("end", () => {
+
+      req.on("end", async () => {
         try {
           const clientLoc = JSON.parse(body);
           const cLat = clientLoc.latitude;
@@ -149,6 +150,14 @@ const server = http.createServer(async (req, res) => {
             );
             return;
           }
+
+          const forwardedHeader = req.headers["x-forwarded-for"];
+          const clientIp =
+            typeof forwardedHeader === "string"
+              ? forwardedHeader.split(",")[0]
+              : req.socket.remoteAddress || "127.0.0.1";
+
+          const clientResolvedData = await resolveClientIpGeo(clientIp!);
 
           const rankedNodes = Array.from(activeNodes.values()).map((node) => {
             const distanceKm = calculateHaversineDistance(
@@ -192,6 +201,7 @@ const server = http.createServer(async (req, res) => {
             JSON.stringify({
               token: secureToken,
               suggestedNodes: rankedNodes,
+              clientIsp: clientResolvedData.isp,
             }),
           );
         } catch {
