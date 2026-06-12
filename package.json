@@ -51,6 +51,7 @@
     "version": "tsx ./scripts/syncVersion.ts"
   },
   "devDependencies": {
+    "@forgata/changelog-cli": "^1.0.0",
     "@types/node": "^25.9.1",
     "@types/ws": "^8.18.1",
     "nodemon": "^3.1.14",
