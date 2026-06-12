@@ -4,6 +4,16 @@ All notable changes will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
 
+## [2.2.1] - 2026-06-12
+
+### Added
+
+- **Orchestrator:** Introduced accurate client IP resolution in the telemetry endpoint by parsing the `x-forwarded-for` header, ensuring correct geo-data extraction when deployed behind proxies.
+
+### Fixed
+
+- **UI:** Corrected the diagnostic card logic to accurately display the active client's geographical coordinates and ISP, resolving an issue where the Edge Node's server data was displayed instead.
+
 ## [2.2.0] - 2026-06-09
 
 ### Added
