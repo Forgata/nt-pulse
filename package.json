@@ -42,7 +42,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "concurrently \"node dist/orchestrator.js\" \"node dist/server.js\"",
+    "start": "npx tsc -p tsconfig.worker.json && concurrently \"node dist/orchestrator.js\" \"node dist/server.js\"",
     "version": "tsx ./scripts/syncVersion.ts"
   },
   "devDependencies": {
