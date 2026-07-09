@@ -1,5 +1,6 @@
 import "dotenv/config";
 import http from "http";
+import httpProxy from "http-proxy";
 import crypto from "crypto";
 import { calculateHaversineDistance } from "./orchestrator/haversineDIstance.js";
 
@@ -7,6 +8,10 @@ const PORT = parseInt(process.env.PORT || "4000");
 const ORCHESTRATION_SECRET =
   process.env.ORCHESTRATION_SECRET ||
   "dev-secret-baseline-token-32-chars-minimum";
+
+const wsProxy = httpProxy.createProxyServer({
+  ws: true,
+});
 
 if (!ORCHESTRATION_SECRET)
   throw new Error("ORCHESTRATION_SECRET environment variable is required.");
@@ -338,6 +343,13 @@ setInterval(() => {
     }
   }
 }, 10000);
+
+server.on("upgrade", (req, socket, head) => {
+  wsProxy.ws(req, socket, head, { target: "ws://127.0.0.1:4002" }, (err) => {
+    console.error("[PROXY] WS Connection Drop:", err.message);
+    socket.destroy();
+  });
+});
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`[ORCHESTRATOR] Plane live on port ${PORT}`);
