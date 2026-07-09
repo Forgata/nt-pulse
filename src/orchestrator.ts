@@ -345,7 +345,7 @@ setInterval(() => {
 }, 10000);
 
 server.on("upgrade", (req, socket, head) => {
-  wsProxy.ws(req, socket, head, { target: "ws://127.0.0.1:4002" }, (err) => {
+  wsProxy.ws(req, socket, head, { target: "ws://127.0.0.1:4001" }, (err) => {
     console.error("[PROXY] WS Connection Drop:", err.message);
     socket.destroy();
   });
