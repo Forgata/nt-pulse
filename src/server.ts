@@ -7,15 +7,23 @@ import {
   resolveDynamicNetworkProfile,
 } from "./server/resolveNetworkTopology.js";
 
-const PORT = parseInt(process.env.PORT || "4001");
-const WS_PORT = parseInt(process.env.WS_PORT || "4002");
+const PORT = 4001;
+const WS_PORT = 4002;
 const CHUNK_SIZE = 64 * 1024;
+
+process.env.ORCHESTRATION_HOST = `http://127.0.0.1:${process.env.PORT || 4000}`;
+
+// 3. Render natively injects RENDER_EXTERNAL_URL (e.g., https://nt-pulse.onrender.com)
+const publicUrl =
+  process.env.RENDER_EXTERNAL_URL ||
+  `http://127.0.0.1:${process.env.PORT || 4000}`;
+const publicWsUrl = publicUrl.replace(/^http/, "ws");
 
 let networkProfile = {
   id: `edge-node-${PORT}`,
   host: "",
   port: PORT,
-  wsPort: PORT,
+  wsPort: publicWsUrl,
   latitude: 0,
   longitude: 0,
   isp: "Resolving...",
