@@ -1,8 +1,20 @@
 # Changelog
 
 All notable changes will be documented in this file.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). This changelog starts from version 1.0.0.
+# [v2.3.0] - 2026-07-09
+
+### Added
+
+- **Orchestrator:** Implemented WebSocket proxy support to facilitate the seamless handling of protocol upgrade requests.
+- **Dependencies:** Integrated `concurrently` and `http-proxy` into the project manifest to support enhanced service orchestration.
+
+### Changed
+
+- **Service Configuration:** Consolidated web service definitions within `render.yaml` and standardized build and execution commands.
+- **Build Pipeline:** Refactored the `start` script within `package.json` to enforce TypeScript compilation as a prerequisite for server and orchestrator initialization.
+<!-- commit-hash: 6c70a7075deae8ec9ee0df24f390b3df5844752a -->
 
 ## [2.2.1] - 2026-06-12
 
