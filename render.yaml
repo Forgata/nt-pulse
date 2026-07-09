@@ -3,7 +3,7 @@ services:
     name: nt-pulse-orchestrator
     env: node
     plan: free
-    buildCommand: "npm install && npm run build"
+    buildCommand: "npm install --include=dev && npm run build"
     startCommand: "npm start"
     envVars:
       - key: NODE_ENV
@@ -11,4 +11,3 @@ services:
       - key: ORCHESTRATION_SECRET
         value: "generate-a-long-random-string-here-12345"
       # Note: Render automatically provides RENDER_EXTERNAL_URL to the runtime,
-      # so you don't need to manually define it here anymore.
